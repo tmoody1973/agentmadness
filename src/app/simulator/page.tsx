@@ -356,6 +356,9 @@ export default function Home() {
                   onSelect={setActiveTournamentId}
                 />
               )}
+              <a href="/news" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
+                News
+              </a>
               <a href="/leaderboard" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
                 Leaderboard
               </a>
@@ -392,6 +395,9 @@ export default function Home() {
                 activeTournamentId={effectiveTournamentId ?? ""}
                 onSelect={setActiveTournamentId}
               />
+              <a href="/news" className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] shrink-0">
+                News
+              </a>
               <a href="/leaderboard" className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] shrink-0">
                 Board
               </a>

@@ -19,6 +19,9 @@ export default function LandingPage() {
             <a href="/simulator" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
               Simulator
             </a>
+            <a href="/news" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
+              News
+            </a>
             <a href="/leaderboard" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
               Leaderboard
             </a>
@@ -63,6 +66,13 @@ export default function LandingPage() {
             className="text-2xl font-bold uppercase tracking-wider text-white"
           >
             Simulator
+          </a>
+          <a
+            href="/news"
+            onClick={() => setMenuOpen(false)}
+            className="text-2xl font-bold uppercase tracking-wider text-white"
+          >
+            News
           </a>
           <a
             href="/leaderboard"
@@ -495,6 +505,7 @@ export default function LandingPage() {
           </span>
           <div className="flex items-center gap-6 text-sm text-white/30">
             <a href="/simulator" className="hover:text-white/60 transition-colors">Simulator</a>
+            <a href="/news" className="hover:text-white/60 transition-colors">News</a>
             <a href="/predictions" className="hover:text-white/60 transition-colors">Predictions</a>
             <a href="/leaderboard" className="hover:text-white/60 transition-colors">Leaderboard</a>
             <a href="#about" className="hover:text-white/60 transition-colors">About</a>

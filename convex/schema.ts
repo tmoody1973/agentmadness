@@ -110,4 +110,32 @@ export default defineSchema({
     .index("by_tournament", ["tournamentId"])
     .index("by_tournament_round", ["tournamentId", "round"])
     .index("by_order", ["tournamentId", "gameOrder"]),
+
+  dailyRecaps: defineTable({
+    date: v.string(), // "2026-03-19"
+    gender: v.union(v.literal("men"), v.literal("women")),
+    title: v.string(),
+    summary: v.string(),
+    script: v.string(),
+    audioStorageId: v.optional(v.id("_storage")),
+    games: v.array(v.object({
+      teamAName: v.string(),
+      teamASeed: v.number(),
+      teamBName: v.string(),
+      teamBSeed: v.number(),
+      ourPrediction: v.number(),
+      actualWinner: v.string(),
+      actualScoreWinner: v.optional(v.number()),
+      actualScoreLoser: v.optional(v.number()),
+      weWereRight: v.boolean(),
+      isUpset: v.boolean(),
+    })),
+    accuracy: v.number(),
+    totalGames: v.number(),
+    correctPicks: v.number(),
+    biggestSurprise: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_date_gender", ["date", "gender"])
+    .index("by_gender", ["gender"]),
 });
