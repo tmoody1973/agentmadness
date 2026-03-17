@@ -10,6 +10,7 @@ import { SimControls } from "../../components/SimControls";
 import { StatsOverlay } from "../../components/StatsOverlay";
 import { Bracket } from "../../components/Bracket";
 import { Sidebar } from "../../components/Sidebar";
+import { LiveFeed } from "../../components/LiveFeed";
 import type { Game, Team } from "../../lib/types";
 
 const ZOOM_MIN = 0.4;
@@ -391,6 +392,23 @@ export default function Home() {
             />
           )}
         </div>
+
+        {/* Live feed */}
+        {games && teams && (tournament?.status === "simulating" || tournament?.status === "completed") && (
+          <div className="shrink-0 border-b border-white/5 bg-[#0D1220]">
+            <div className="flex items-center gap-2 px-4 pt-2 pb-1">
+              <div className="h-2 w-2 rounded-full bg-[#FF8C00] animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#FF8C00]">
+                Live Feed
+              </span>
+            </div>
+            <LiveFeed
+              games={games}
+              teams={teams}
+              onSelectGame={handleSelectGame}
+            />
+          </div>
+        )}
 
         {/* Bracket scroll area */}
         <div
