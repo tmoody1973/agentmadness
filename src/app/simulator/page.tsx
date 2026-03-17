@@ -483,7 +483,7 @@ export default function Home() {
         </div>
 
         {/* Mobile bracket */}
-        <div className="flex lg:hidden flex-1 overflow-hidden">
+        <div className="flex lg:hidden flex-1 min-h-0">
           {tournament && teams && games && (
             <MobileBracket
               tournament={tournament}
