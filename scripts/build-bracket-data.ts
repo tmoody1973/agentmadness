@@ -63,7 +63,7 @@ async function buildBracket(gender: Gender): Promise<BracketData> {
 
   // Step 4: Perplexity enrichment (optional)
   console.log("4. Enriching with Perplexity (if API key set)...");
-  const perplexityContexts = await enrichWithPerplexity(rawTeams);
+  const perplexityContexts = await enrichWithPerplexity(rawTeams, statsMap as any);
 
   // Step 5: Generate Claude profiles (optional)
   console.log("5. Generating Claude profiles (if API key set)...");
