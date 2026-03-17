@@ -46,7 +46,7 @@ export function Bracket({
   const firstFourGames = getGamesByRound(games, "FIRST_FOUR") as Game[];
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-4 min-w-[1300px]">
+    <div className="flex flex-col gap-6 px-4 py-4 min-w-[1300px] mx-auto w-fit">
       {/* ── Top region pair: topLeft (LTR) + topRight (RTL) ── */}
       <div className="flex items-start gap-4 justify-center">
         <RegionBracket
