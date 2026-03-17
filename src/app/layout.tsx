@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AgentMadness — AI Tournament Simulator",
   description: "AI-powered NCAA Tournament bracket simulator. 136 teams. 134 games. Every matchup simulated by Claude AI.",
-  metadataBase: new URL("https://agentmadness.vercel.app"),
+  metadataBase: new URL("https://agentmadness-seven.vercel.app"),
   openGraph: {
     title: "AgentMadness — AI Tournament Simulator",
     description: "68 teams become AI agents. Claude simulates every game. ElevenLabs calls every upset. The bracket fills in real time.",
