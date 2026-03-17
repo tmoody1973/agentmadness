@@ -463,10 +463,10 @@ function GamePanel({
             </div>
           )}
 
-          {announcerEnabled && game.audioStorageId && (
+          {game.audioStorageId && (
             <div className="flex flex-col gap-1">
               <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">Announcer Audio</div>
-              <AudioPlayer storageId={game.audioStorageId} autoPlay={announcerEnabled} />
+              <AudioPlayer storageId={game.audioStorageId} autoPlay={false} />
             </div>
           )}
         </>
