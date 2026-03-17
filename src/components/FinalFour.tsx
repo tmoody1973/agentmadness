@@ -33,16 +33,16 @@ export function FinalFour({
     <div className="flex flex-col items-center gap-3 px-2">
       {/* Header */}
       <div className="text-center">
-        <span className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
+        <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
           Final Four
         </span>
       </div>
 
       {/* Horizontal layout: Semifinal 1 — Championship — Semifinal 2 */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-5">
         {/* Semifinal 1 */}
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
             Semifinal 1
           </span>
           {semi1 ? (
@@ -78,7 +78,7 @@ export function FinalFour({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
                     🏆 Championship
                   </span>
                   <div className="ring-1 ring-[#FFB800]/40 rounded-xl p-1 bg-[#FFB800]/5">
@@ -93,7 +93,7 @@ export function FinalFour({
                 </motion.div>
               ) : (
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
                     🏆 Championship
                   </span>
                   <EmptySlot label="TBD" />
@@ -106,7 +106,7 @@ export function FinalFour({
 
         {/* Semifinal 2 */}
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
             Semifinal 2
           </span>
           {semi2 ? (
@@ -154,8 +154,8 @@ export function FinalFour({
 
 function EmptySlot({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-center rounded border border-white/5 bg-[#151C2C] text-xs text-[#475569] italic"
-      style={{ width: 170, height: 52 }}>
+    <div className="flex items-center justify-center rounded border border-white/5 bg-[#1E2A3A] text-xs text-[#475569] italic"
+      style={{ width: 200, height: 58 }}>
       {label}
     </div>
   );

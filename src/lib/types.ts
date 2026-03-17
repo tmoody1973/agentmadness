@@ -40,10 +40,10 @@ export const ROUND_LABELS: Record<Round, string> = {
 };
 
 export const SEED_COLORS = {
-  favorites: "#3B82F6",    // 1-4 blue
-  contenders: "#00E5A0",   // 5-8 teal
-  dangerous: "#FFB800",    // 9-12 gold
-  underdogs: "#FF3B5C",    // 13-16 hot pink
+  favorites: "#4B8DF8",    // 1-4 softer blue
+  contenders: "#10D4A0",   // 5-8 muted teal
+  dangerous: "#F5A623",    // 9-12 warm gold
+  underdogs: "#F44771",    // 13-16 vibrant pink
 } as const;
 
 export function getSeedColor(seed: number): string {

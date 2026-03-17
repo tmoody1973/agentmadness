@@ -93,10 +93,10 @@ function Stat({
 
   return (
     <div className="flex flex-col">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
         {label}
       </span>
-      <span className={`text-sm font-extrabold uppercase tracking-tight ${valueColor} ${mono ? "font-mono tabular-nums" : ""}`}>
+      <span className={`text-base font-extrabold uppercase tracking-tight ${valueColor} ${mono ? "font-mono tabular-nums" : ""}`}>
         {value}
       </span>
     </div>

@@ -47,7 +47,7 @@ export function SimControls({
     tournament.currentRound;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-[#111827]/80 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-white/5 bg-[#111827]/80 px-4 py-3">
       {/* Round info */}
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
@@ -73,7 +73,7 @@ export function SimControls({
             key={value}
             onClick={() => setSpeed({ tournamentId: id, speed: value })}
             className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all",
+              "rounded-md px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all",
               tournament.speed === value
                 ? "bg-white/5 border border-[#00E5A0]/50 text-[#00E5A0]"
                 : "bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20"
@@ -97,7 +97,7 @@ export function SimControls({
             })
           }
           className={cn(
-            "rounded-lg px-5 py-2 text-sm font-bold uppercase tracking-wide transition-all",
+            "rounded-lg px-6 py-2.5 text-sm font-bold uppercase tracking-wide transition-all",
             isSimulating || isCompleted || !canSimulate
               ? "cursor-not-allowed opacity-40 bg-[#1A2235] text-[#475569]"
               : "bg-[#00E5A0] text-[#0A0E17] hover:bg-[#00C890] active:scale-95"
@@ -117,7 +117,7 @@ export function SimControls({
           disabled={isSimulating || isCompleted || !canSimulate}
           onClick={() => runSimulateAll({ tournamentId: id })}
           className={cn(
-            "rounded-lg px-5 py-2 text-sm font-bold uppercase tracking-wide transition-all",
+            "rounded-lg px-6 py-2.5 text-sm font-bold uppercase tracking-wide transition-all",
             isSimulating || isCompleted || !canSimulate
               ? "cursor-not-allowed opacity-40 bg-[#1A2235] text-[#475569]"
               : "bg-[#FFB800] text-[#0A0E17] hover:bg-[#E5A600] active:scale-95"

@@ -59,7 +59,7 @@ function getHistoricalNote(seedA: number, seedB: number): string | null {
 function SidebarHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 shrink-0">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">{title}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">{title}</span>
       <button
         onClick={onClose}
         className="rounded-md p-1 text-[#475569] hover:bg-white/10 hover:text-white transition-colors"
@@ -87,7 +87,7 @@ function StatBox({
   return (
     <div className="bg-[#0A0E17] border border-white/5 rounded-lg px-3 py-2.5 text-center">
       <div className="text-[9px] font-semibold uppercase tracking-[0.15em] text-[#475569] mb-0.5">{label}</div>
-      <div className={`text-sm font-bold font-mono tabular-nums ${highlight ? "text-[#00E5A0]" : "text-white"}`}>
+      <div className={`text-xl font-bold font-mono tabular-nums ${highlight ? "text-[#00E5A0]" : "text-white"}`}>
         {value}
       </div>
       {sub && <div className="text-[9px] text-[#475569] mt-0.5">{sub}</div>}
@@ -104,7 +104,7 @@ function WinProbBar({ prob, labelA, labelB }: { prob: number; labelA: string; la
         <span className="truncate max-w-[120px]">{labelA}</span>
         <span className="truncate max-w-[120px] text-right">{labelB}</span>
       </div>
-      <div className="flex h-2 rounded-full overflow-hidden bg-[#1A2235]">
+      <div className="flex h-3 rounded-full overflow-hidden bg-[#1A2235]">
         <div
           className="transition-all duration-500"
           style={{ width: `${pctA}%`, backgroundColor: "#00E5A0" }}
@@ -315,7 +315,7 @@ function TeamPanel({ team }: { team: Team }) {
           {team.seed}
         </span>
         <div className="min-w-0">
-          <div className="font-extrabold text-white text-base uppercase tracking-tight truncate">{team.name}</div>
+          <div className="font-extrabold text-white text-lg uppercase tracking-tight truncate">{team.name}</div>
           <div className="text-[10px] font-medium text-[#94A3B8]">
             {team.conference.toUpperCase()} · {team.region} · {team.record}
           </div>
@@ -364,7 +364,7 @@ function TeamPanel({ team }: { team: Team }) {
             {team.styleTraits.map((trait) => (
               <span
                 key={trait}
-                className="rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-[#94A3B8]"
+                className="rounded-full bg-white/5 border border-white/15 px-2.5 py-0.5 text-[10px] font-medium text-[#94A3B8] hover:border-white/25 transition-colors"
               >
                 {trait}
               </span>
@@ -441,7 +441,7 @@ export function Sidebar({
 
   return (
     <aside
-      className="flex flex-col bg-[#111827] border-l border-white/5 overflow-hidden shrink-0"
+      className="flex flex-col bg-[#111827] border-l border-white/5 overflow-hidden shrink-0 shadow-xl"
       style={{ width: 350 }}
     >
       <AnimatePresence mode="wait">
