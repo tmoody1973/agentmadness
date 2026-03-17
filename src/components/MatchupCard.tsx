@@ -18,24 +18,24 @@ interface MatchupCardProps {
 
 const variants = {
   pending: {
-    opacity: 0.4,
-    borderColor: "rgba(255,255,255,0.06)",
-    boxShadow: "none",
+    opacity: 0.75,
+    borderColor: "rgba(255,255,255,0.15)",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
   },
   simulating: {
     opacity: 1,
     borderColor: "#FF8C00",
-    boxShadow: "0 0 16px 3px rgba(255,140,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)",
+    boxShadow: "0 0 20px 4px rgba(255,140,0,0.3)",
   },
   completed: {
     opacity: 1,
-    borderColor: "rgba(0,229,160,0.25)",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
+    borderColor: "rgba(0,229,160,0.35)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
   },
   upset: {
     opacity: 1,
     borderColor: "#F44771",
-    boxShadow: "0 0 16px 3px rgba(244,71,113,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+    boxShadow: "0 0 20px 4px rgba(244,71,113,0.35)",
   },
 };
 
@@ -71,7 +71,7 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
   return (
     <motion.div
       className={cn(
-        "relative cursor-pointer rounded-lg border border-white/10 bg-[#1C2636] select-none overflow-visible shadow-md",
+        "relative cursor-pointer rounded-lg border-2 border-white/15 bg-[#1E293B] select-none overflow-visible shadow-lg shadow-black/40",
         isSelected && "ring-2 ring-[#4B8DF8]/70"
       )}
       animate={animateValues}
