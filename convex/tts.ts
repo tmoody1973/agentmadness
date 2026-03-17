@@ -5,7 +5,7 @@ import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 const DEFAULT_VOICE_ID = "TxGEqnHWrfWFTfGW9XjX";
-const ELEVENLABS_MODEL = "eleven_turbo_v2_5";
+const ELEVENLABS_MODEL = "eleven_v3";
 
 export const generateAudio = internalAction({
   args: {

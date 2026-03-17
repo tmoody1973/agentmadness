@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
+import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { TournamentToggle } from "../components/TournamentToggle";
@@ -17,6 +18,7 @@ const ZOOM_DEFAULT = 0.75;
 const ZOOM_STEP = 0.1;
 
 export default function Home() {
+  const { isSignedIn } = useAuth();
   const [activeTournamentId, setActiveTournamentId] = useState<string | null>(null);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -137,6 +139,21 @@ export default function Home() {
                 onSelect={setActiveTournamentId}
               />
             )}
+
+            <div className="flex items-center gap-4">
+              <a href="/leaderboard" className="text-sm text-gray-400 hover:text-white transition-colors">
+                Leaderboard
+              </a>
+              {!isSignedIn ? (
+                <SignInButton mode="modal">
+                  <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors">
+                    Sign in to Simulate
+                  </button>
+                </SignInButton>
+              ) : (
+                <UserButton />
+              )}
+            </div>
           </div>
         </header>
 

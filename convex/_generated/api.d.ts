@@ -10,10 +10,12 @@
 
 import type * as bracket from "../bracket.js";
 import type * as init from "../init.js";
+import type * as leaderboard from "../leaderboard.js";
 import type * as prompts from "../prompts.js";
 import type * as seedHelpers from "../seedHelpers.js";
 import type * as simulate from "../simulate.js";
 import type * as tts from "../tts.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -24,10 +26,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   bracket: typeof bracket;
   init: typeof init;
+  leaderboard: typeof leaderboard;
   prompts: typeof prompts;
   seedHelpers: typeof seedHelpers;
   simulate: typeof simulate;
   tts: typeof tts;
+  users: typeof users;
 }>;
 
 /**

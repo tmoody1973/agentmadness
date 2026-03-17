@@ -275,9 +275,29 @@ export const runSimulateRound = action({
     round: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Authentication required to simulate");
+    }
+
+    // Check rate limit
+    const today = new Date().toISOString().split("T")[0];
+    const existing = await ctx.runQuery(internal.users.getRateLimitRecord, {
+      userId: identity.subject,
+      date: today,
+    });
+    const used = existing?.runCount ?? 0;
+    if (used >= 3) {
+      throw new Error("Daily simulation limit reached (3 runs per day)");
+    }
+
     await ctx.runAction(internal.simulate.simulateRound, {
       tournamentId: args.tournamentId,
       round: args.round,
+    });
+
+    await ctx.runMutation(internal.users.recordSimulationRun, {
+      userId: identity.subject,
     });
   },
 });
@@ -285,8 +305,28 @@ export const runSimulateRound = action({
 export const runSimulateAll = action({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Authentication required to simulate");
+    }
+
+    // Check rate limit
+    const today = new Date().toISOString().split("T")[0];
+    const existing = await ctx.runQuery(internal.users.getRateLimitRecord, {
+      userId: identity.subject,
+      date: today,
+    });
+    const used = existing?.runCount ?? 0;
+    if (used >= 3) {
+      throw new Error("Daily simulation limit reached (3 runs per day)");
+    }
+
     await ctx.runAction(internal.simulate.simulateAll, {
       tournamentId: args.tournamentId,
+    });
+
+    await ctx.runMutation(internal.users.recordSimulationRun, {
+      userId: identity.subject,
     });
   },
 });

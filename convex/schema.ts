@@ -45,6 +45,29 @@ export default defineSchema({
     .index("by_tournament", ["tournamentId"])
     .index("by_tournament_region", ["tournamentId", "region"]),
 
+  userLimits: defineTable({
+    userId: v.string(),
+    date: v.string(),
+    runCount: v.number(),
+  }).index("by_user_date", ["userId", "date"]),
+
+  simResults: defineTable({
+    odifier: v.optional(v.string()),
+    gender: v.union(v.literal("men"), v.literal("women")),
+    champion: v.string(),
+    championSeed: v.number(),
+    finalFourTeams: v.array(v.object({
+      name: v.string(),
+      seed: v.number(),
+    })),
+    upsetCount: v.number(),
+    biggestUpset: v.optional(v.string()),
+    totalGames: v.number(),
+    completedAt: v.number(),
+  })
+    .index("by_gender", ["gender"])
+    .index("by_champion", ["champion"]),
+
   games: defineTable({
     tournamentId: v.id("tournaments"),
     round: v.string(),

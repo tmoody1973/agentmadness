@@ -231,11 +231,13 @@ export const advanceRound = internalMutation({
         .collect();
 
       let championName: string | undefined;
+      let winner: { name: string; seed: number } | undefined;
       for (const g of champGames) {
         if (g.status === "completed" && g.winnerId) {
           const champ = await ctx.db.get(g.winnerId);
           if (champ) {
             championName = champ.name;
+            winner = { name: champ.name, seed: champ.seed };
             break;
           }
         }
@@ -245,6 +247,42 @@ export const advanceRound = internalMutation({
         currentRound: "DONE",
         status: "completed",
         champion: championName,
+      });
+
+      // Record simulation result
+      const f4Games = await ctx.db
+        .query("games")
+        .withIndex("by_tournament_round", (q) =>
+          q.eq("tournamentId", args.tournamentId).eq("round", "F4")
+        )
+        .collect();
+
+      const finalFourTeams: { name: string; seed: number }[] = [];
+      for (const game of f4Games) {
+        if (game.teamAId) {
+          const teamA = await ctx.db.get(game.teamAId);
+          if (teamA) finalFourTeams.push({ name: teamA.name, seed: teamA.seed });
+        }
+        if (game.teamBId) {
+          const teamB = await ctx.db.get(game.teamBId);
+          if (teamB) finalFourTeams.push({ name: teamB.name, seed: teamB.seed });
+        }
+      }
+
+      const allGames = await ctx.db
+        .query("games")
+        .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+        .collect();
+
+      await ctx.db.insert("simResults", {
+        gender: tournament.gender,
+        champion: winner?.name ?? "Unknown",
+        championSeed: winner?.seed ?? 0,
+        finalFourTeams,
+        upsetCount: tournament.upsetCount,
+        biggestUpset: tournament.biggestUpset,
+        totalGames: allGames.filter((g) => g.status === "completed").length,
+        completedAt: Date.now(),
       });
     } else {
       await ctx.db.patch(args.tournamentId, {

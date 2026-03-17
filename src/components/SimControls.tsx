@@ -1,6 +1,6 @@
 "use client";
 
-import { useAction, useMutation } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { Tournament } from "../lib/types";
@@ -32,9 +32,14 @@ export function SimControls({
   const runSimulateAll = useAction(api.simulate.runSimulateAll);
   const setSpeed = useMutation(api.bracket.setSpeed);
   const resetTournament = useMutation(api.bracket.resetTournament);
+  const rateLimit = useQuery(api.users.checkRateLimit);
 
   const isSimulating = tournament.status === "simulating";
   const isCompleted = tournament.status === "completed";
+  const isAuthenticated = rateLimit?.authenticated ?? false;
+  const rateLimitAllowed = rateLimit?.allowed ?? false;
+  const remaining = rateLimit?.remaining ?? 0;
+  const canSimulate = isAuthenticated && rateLimitAllowed;
   const id = tournamentId as Id<"tournaments">;
 
   const currentRoundLabel =
@@ -84,7 +89,7 @@ export function SimControls({
       {/* Simulate buttons */}
       <div className="flex items-center gap-2">
         <button
-          disabled={isSimulating || isCompleted}
+          disabled={isSimulating || isCompleted || !canSimulate}
           onClick={() =>
             runSimulateRound({
               tournamentId: id,
@@ -93,7 +98,7 @@ export function SimControls({
           }
           className={cn(
             "rounded-lg px-3 py-1.5 text-sm font-semibold transition-all",
-            isSimulating || isCompleted
+            isSimulating || isCompleted || !canSimulate
               ? "cursor-not-allowed opacity-40 bg-gray-700 text-gray-400"
               : "bg-blue-600 text-white hover:bg-blue-500 active:scale-95"
           )}
@@ -109,17 +114,34 @@ export function SimControls({
         </button>
 
         <button
-          disabled={isSimulating || isCompleted}
+          disabled={isSimulating || isCompleted || !canSimulate}
           onClick={() => runSimulateAll({ tournamentId: id })}
           className={cn(
             "rounded-lg px-3 py-1.5 text-sm font-semibold transition-all",
-            isSimulating || isCompleted
+            isSimulating || isCompleted || !canSimulate
               ? "cursor-not-allowed opacity-40 bg-gray-700 text-gray-400"
               : "bg-purple-600 text-white hover:bg-purple-500 active:scale-95"
           )}
         >
           ⚡ Simulate All
         </button>
+
+        {/* Auth / rate-limit status */}
+        {!isAuthenticated && (
+          <span className="text-xs text-gray-500 italic">
+            Sign in to simulate
+          </span>
+        )}
+        {isAuthenticated && !rateLimitAllowed && (
+          <span className="text-xs text-red-400 font-medium">
+            Daily limit reached
+          </span>
+        )}
+        {isAuthenticated && rateLimitAllowed && (
+          <span className="text-xs text-gray-500">
+            {remaining} run{remaining !== 1 ? "s" : ""} remaining today
+          </span>
+        )}
       </div>
 
       <div className="h-5 w-px bg-white/10" />
