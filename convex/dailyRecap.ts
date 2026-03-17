@@ -213,7 +213,7 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
           : `NCAA March Madness ${genderLabel} tournament action on ${date}`;
 
         const geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${geminiKey}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
