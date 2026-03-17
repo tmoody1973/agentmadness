@@ -382,3 +382,28 @@ export const resetTournament = mutation({
     }
   },
 });
+
+// ─── Clear All Data ──────────────────────────────────────────────────────────
+
+export const clearAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const tournaments = await ctx.db.query("tournaments").collect();
+    const teams = await ctx.db.query("teams").collect();
+    const games = await ctx.db.query("games").collect();
+
+    for (const game of games) {
+      // Delete associated audio files
+      if (game.audioStorageId) {
+        await ctx.storage.delete(game.audioStorageId);
+      }
+      await ctx.db.delete(game._id);
+    }
+    for (const team of teams) {
+      await ctx.db.delete(team._id);
+    }
+    for (const tournament of tournaments) {
+      await ctx.db.delete(tournament._id);
+    }
+  },
+});

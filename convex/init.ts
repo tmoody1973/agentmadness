@@ -1,95 +1,9 @@
 "use node";
 
-import { v } from "convex/values";
-import { internalAction, internalMutation } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { MEN_BRACKET_2026, WOMEN_BRACKET_2026 } from "../src/data/bracket-2026";
 import type { BracketData } from "../scripts/lib/types";
-
-// ─── Internal Mutations ──────────────────────────────────────────────────────
-
-export const createTournament = internalMutation({
-  args: {
-    name: v.string(),
-    year: v.number(),
-    gender: v.union(v.literal("men"), v.literal("women")),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("tournaments", {
-      name: args.name,
-      year: args.year,
-      gender: args.gender,
-      status: "ready",
-      currentRound: "FIRST_FOUR",
-      currentGameIndex: 0,
-      speed: 500,
-      upsetCount: 0,
-    });
-  },
-});
-
-export const createTeam = internalMutation({
-  args: {
-    tournamentId: v.id("tournaments"),
-    teamKey: v.string(),
-    name: v.string(),
-    seed: v.number(),
-    region: v.string(),
-    conference: v.string(),
-    record: v.string(),
-    netRanking: v.number(),
-    adjOE: v.float64(),
-    adjDE: v.float64(),
-    adjTempo: v.float64(),
-    volatility: v.float64(),
-    tournamentExperience: v.float64(),
-    clutchRating: v.float64(),
-    depthScore: v.float64(),
-    keyPlayers: v.string(),
-    styleTraits: v.array(v.string()),
-    perplexityContext: v.optional(v.string()),
-    eliminated: v.boolean(),
-    eliminatedRound: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("teams", { ...args });
-  },
-});
-
-export const createGame = internalMutation({
-  args: {
-    tournamentId: v.id("tournaments"),
-    round: v.string(),
-    region: v.optional(v.string()),
-    bracketSlot: v.string(),
-    gameOrder: v.number(),
-    teamAId: v.optional(v.id("teams")),
-    teamBId: v.optional(v.id("teams")),
-    scheduledTime: v.optional(v.string()),
-    venue: v.optional(v.string()),
-    tvChannel: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("games", {
-      ...args,
-      status: "pending",
-    });
-  },
-});
-
-export const wireNextGame = internalMutation({
-  args: {
-    gameId: v.id("games"),
-    nextGameId: v.id("games"),
-    nextGameSlot: v.union(v.literal("A"), v.literal("B")),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.gameId, {
-      nextGameId: args.nextGameId,
-      nextGameSlot: args.nextGameSlot,
-    });
-  },
-});
 
 // ─── Seed Action ─────────────────────────────────────────────────────────────
 
@@ -99,7 +13,7 @@ async function seedBracket(
   name: string,
   gender: "men" | "women"
 ): Promise<void> {
-  const tournamentId = await ctx.runMutation(internal.init.createTournament, {
+  const tournamentId = await ctx.runMutation(internal.seedHelpers.createTournament, {
     name,
     year: 2026,
     gender,
@@ -110,7 +24,7 @@ async function seedBracket(
 
   for (const team of bracket.teams) {
     const record = `${team.stats.wins}-${team.stats.losses}`;
-    const dbId = await ctx.runMutation(internal.init.createTeam, {
+    const dbId = await ctx.runMutation(internal.seedHelpers.createTeam, {
       tournamentId,
       teamKey: `${team.teamId}`,
       name: team.name,
@@ -141,7 +55,7 @@ async function seedBracket(
     const teamAId = seedCodeToDbId.get(game.teamASeedCode);
     const teamBId = seedCodeToDbId.get(game.teamBSeedCode);
 
-    const dbId = await ctx.runMutation(internal.init.createGame, {
+    const dbId = await ctx.runMutation(internal.seedHelpers.createGame, {
       tournamentId,
       round: game.round,
       region: game.region || undefined,
@@ -183,7 +97,7 @@ async function seedBracket(
     const slotIndex = sortedFeeders.findIndex((f) => f.bracketSlot === game.bracketSlot);
     const nextGameSlot: "A" | "B" = slotIndex === 0 ? "A" : "B";
 
-    await ctx.runMutation(internal.init.wireNextGame, {
+    await ctx.runMutation(internal.seedHelpers.wireNextGame, {
       gameId: currentDbId,
       nextGameId: nextDbId,
       nextGameSlot,

@@ -207,9 +207,9 @@ export const simulateGame = internalAction({
   },
 });
 
-// ─── simulateRound (action) ───────────────────────────────────────────────────
+// ─── simulateRound (internal, called by simulateAll) ─────────────────────────
 
-export const simulateRound = action({
+export const simulateRound = internalAction({
   args: {
     tournamentId: v.id("tournaments"),
     round: v.string(),
@@ -244,9 +244,9 @@ export const simulateRound = action({
   },
 });
 
-// ─── simulateAll (action) ─────────────────────────────────────────────────────
+// ─── simulateAll (internal) ───────────────────────────────────────────────────
 
-export const simulateAll = action({
+export const simulateAll = internalAction({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
     for (const round of ROUND_ORDER) {
@@ -264,5 +264,29 @@ export const simulateAll = action({
         round,
       });
     }
+  },
+});
+
+// ─── Public wrappers (called by frontend) ────────────────────────────────────
+
+export const runSimulateRound = action({
+  args: {
+    tournamentId: v.id("tournaments"),
+    round: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.runAction(internal.simulate.simulateRound, {
+      tournamentId: args.tournamentId,
+      round: args.round,
+    });
+  },
+});
+
+export const runSimulateAll = action({
+  args: { tournamentId: v.id("tournaments") },
+  handler: async (ctx, args) => {
+    await ctx.runAction(internal.simulate.simulateAll, {
+      tournamentId: args.tournamentId,
+    });
   },
 });
