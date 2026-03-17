@@ -52,7 +52,7 @@ export default defineSchema({
   }).index("by_user_date", ["userId", "date"]),
 
   simResults: defineTable({
-    odifier: v.optional(v.string()),
+    userId: v.optional(v.string()),
     gender: v.union(v.literal("men"), v.literal("women")),
     champion: v.string(),
     championSeed: v.number(),
