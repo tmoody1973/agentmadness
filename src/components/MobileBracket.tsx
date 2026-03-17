@@ -43,8 +43,11 @@ export function MobileBracket({
   return (
     <div className="flex flex-col h-full">
       {/* Round tabs - horizontally scrollable */}
-      <div className="shrink-0 overflow-x-auto border-b border-white/5 bg-[#0D1220]">
-        <div className="flex gap-1 px-3 py-2 min-w-max">
+      <div
+        className="shrink-0 border-b border-white/5 bg-[#0D1220] no-scrollbar"
+        style={{ overflowX: "scroll", WebkitOverflowScrolling: "touch" }}
+      >
+        <div className="flex gap-1.5 px-3 py-2" style={{ width: "max-content" }}>
           {ROUND_ORDER.map((round) => {
             const count = games.filter((g) => g.round === round).length;
             const completed = games.filter(
