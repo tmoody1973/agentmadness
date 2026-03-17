@@ -22,6 +22,7 @@ export const storeRecap = internalMutation({
     summary: v.string(),
     script: v.string(),
     audioStorageId: v.optional(v.id("_storage")),
+    imageStorageId: v.optional(v.id("_storage")),
     games: v.array(gameSchema),
     accuracy: v.number(),
     totalGames: v.number(),
@@ -69,6 +70,13 @@ export const getLatestRecap = query({
 });
 
 export const getRecapAudioUrl = query({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, { storageId }) => {
+    return ctx.storage.getUrl(storageId);
+  },
+});
+
+export const getRecapImageUrl = query({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, { storageId }) => {
     return ctx.storage.getUrl(storageId);

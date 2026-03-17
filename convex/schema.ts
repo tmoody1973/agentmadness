@@ -118,6 +118,7 @@ export default defineSchema({
     summary: v.string(),
     script: v.string(),
     audioStorageId: v.optional(v.id("_storage")),
+    imageStorageId: v.optional(v.id("_storage")),
     games: v.array(v.object({
       teamAName: v.string(),
       teamASeed: v.number(),

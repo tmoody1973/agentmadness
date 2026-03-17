@@ -201,7 +201,66 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
       }
     }
 
-    // 5. Store the recap in the database
+    // 5. Generate hero image via Gemini (optional)
+    let imageStorageId: string | undefined;
+    const geminiKey = process.env.GEMINI_API_KEY;
+
+    if (geminiKey) {
+      try {
+        const upsetCount = games.filter((g) => g.isUpset).length;
+        const imagePromptContext = recap.title
+          ? `${recap.title} — ${upsetCount} upsets in ${games.length} NCAA Tournament games`
+          : `NCAA March Madness ${genderLabel} tournament action on ${date}`;
+
+        const geminiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: `Generate a dramatic, cinematic sports photography image for an NCAA March Madness basketball tournament recap. The image should capture the energy of ${imagePromptContext}. Style: dark dramatic lighting, basketball arena atmosphere, ESPN broadcast quality. NO text or words in the image.`,
+                }],
+              }],
+              generationConfig: {
+                responseModalities: ["TEXT", "IMAGE"],
+              },
+            }),
+          }
+        );
+
+        if (geminiResponse.ok) {
+          const geminiData = await geminiResponse.json() as {
+            candidates?: Array<{
+              content?: {
+                parts?: Array<{
+                  inline_data?: { data: string; mime_type: string };
+                  text?: string;
+                }>;
+              };
+            }>;
+          };
+          const imagePart = geminiData.candidates?.[0]?.content?.parts?.find(
+            (p) => p.inline_data != null
+          );
+          if (imagePart?.inline_data) {
+            const imageBytes = Buffer.from(imagePart.inline_data.data, "base64");
+            const imageBlob = new Blob([imageBytes], { type: imagePart.inline_data.mime_type });
+            imageStorageId = await ctx.storage.store(imageBlob);
+          } else {
+            console.warn("Gemini response had no inline_data image part");
+          }
+        } else {
+          const errText = await geminiResponse.text();
+          console.warn(`Gemini API error: ${geminiResponse.status} — ${errText}`);
+        }
+      } catch (err) {
+        console.warn("Gemini image generation failed:", err);
+      }
+    }
+
+    // 6. Store the recap in the database
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const storeArgs: any = {
       date,
@@ -218,6 +277,9 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
     };
     if (audioStorageId !== undefined) {
       storeArgs.audioStorageId = audioStorageId;
+    }
+    if (imageStorageId !== undefined) {
+      storeArgs.imageStorageId = imageStorageId;
     }
 
     await ctx.runMutation(internal.dailyRecapHelpers.storeRecap, storeArgs);
