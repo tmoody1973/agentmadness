@@ -683,7 +683,7 @@ export function Sidebar({
 
   return (
     <aside
-      className="flex flex-col bg-[#111827] border-l border-white/5 overflow-hidden shrink-0 shadow-xl"
+      className="flex flex-col h-full bg-[#111827] border-l border-white/5 overflow-hidden shrink-0 shadow-xl"
       style={{ width: 350 }}
     >
       <AnimatePresence mode="wait">
