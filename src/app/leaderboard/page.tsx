@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { getSeedColor } from "../../lib/types";
+import { TeamLogo } from "../../components/TeamLogo";
 
 export default function LeaderboardPage() {
   const [gender, setGender] = useState<"men" | "women">("men");
@@ -96,6 +97,7 @@ export default function LeaderboardPage() {
                 >
                   <span className="text-sm font-mono tabular-nums text-[#475569]">{idx + 1}</span>
                   <div className="flex items-center gap-2">
+                    <TeamLogo teamName={team.name} size={20} />
                     <span
                       className="flex h-5 w-6 shrink-0 items-center justify-center rounded-sm text-[10px] font-bold text-white"
                       style={{ backgroundColor: getSeedColor(team.bestSeed) }}

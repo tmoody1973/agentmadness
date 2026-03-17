@@ -54,6 +54,20 @@ export const getAudioUrl = query({
   },
 });
 
+export const getGameDetail = query({
+  args: { gameId: v.id("games") },
+  handler: async (ctx, { gameId }) => {
+    const game = await ctx.db.get(gameId);
+    if (!game) return null;
+
+    const teamA = game.teamAId ? await ctx.db.get(game.teamAId) : null;
+    const teamB = game.teamBId ? await ctx.db.get(game.teamBId) : null;
+    const tournament = await ctx.db.get(game.tournamentId);
+
+    return { game, teamA, teamB, tournament };
+  },
+});
+
 // ─── Internal Queries ─────────────────────────────────────────────────────────
 
 export const getGame = internalQuery({

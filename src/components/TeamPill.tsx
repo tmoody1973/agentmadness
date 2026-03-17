@@ -3,6 +3,7 @@
 import { getSeedColor } from "../lib/types";
 import type { Team } from "../lib/types";
 import { cn } from "../lib/utils";
+import { TeamLogo } from "./TeamLogo";
 
 interface TeamPillProps {
   team: Team | undefined;
@@ -26,6 +27,7 @@ export function TeamPill({ team, isWinner, onTeamClick }: TeamPillProps) {
 
   return (
     <div className="flex items-center gap-2 min-w-0">
+      <TeamLogo teamName={team.name} size={20} />
       <span
         className="flex h-6 w-7 shrink-0 items-center justify-center rounded text-xs font-extrabold text-white"
         style={{ backgroundColor: seedColor }}
