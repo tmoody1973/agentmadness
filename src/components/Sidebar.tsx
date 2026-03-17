@@ -23,6 +23,17 @@ const UPSET_RATES: Record<string, number> = {
 };
 
 function getWinProbability(teamA: Team, teamB: Team): number {
+  // Same-seed matchups (First Four): use efficiency differential
+  if (teamA.seed === teamB.seed) {
+    const effA = teamA.adjOE - teamA.adjDE;
+    const effB = teamB.adjOE - teamB.adjDE;
+    const diff = effA - effB;
+    // Convert efficiency gap to probability (logistic-style)
+    // +10 net eff advantage ≈ 70% win probability
+    const prob = 1 / (1 + Math.pow(10, -diff / 15));
+    return Math.max(0.15, Math.min(0.85, prob));
+  }
+
   const hi = Math.min(teamA.seed, teamB.seed);
   const lo = Math.max(teamA.seed, teamB.seed);
   const historicalRate = UPSET_RATES[`${hi}v${lo}`] ?? 0.3;

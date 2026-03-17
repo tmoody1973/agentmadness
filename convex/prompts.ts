@@ -34,10 +34,6 @@ function computeUpsetProbability(
   underdog: Team,
   upsetRates?: Record<string, number>
 ): number {
-  const matchupKey = getMatchupKey(favorite.seed, underdog.seed);
-  const rates = upsetRates ?? DEFAULT_UPSET_RATES;
-  const historicalRate = rates[matchupKey] ?? DEFAULT_UPSET_RATES[matchupKey] ?? 0.15;
-
   // Efficiency differential: higher = better for favorite
   const favEff = favorite.adjOE - favorite.adjDE;
   const undEff = underdog.adjOE - underdog.adjDE;
@@ -54,6 +50,23 @@ function computeUpsetProbability(
   const expGap = favorite.tournamentExperience - underdog.tournamentExperience;
   // Normalize: typical range [-20, 40]
   const normalizedExpGap = clamp((expGap + 20) / 60, 0, 1);
+
+  // Same-seed matchups (First Four): skip historical rate, weight on efficiency
+  if (favorite.seed === underdog.seed) {
+    // For same-seed games, "upset" = team A losing to team B (arbitrary)
+    // Use efficiency as primary differentiator with volatility as chaos
+    const effProb = 1 - normalizedEffGap; // lower efficiency = more likely to "lose"
+    const upsetProb =
+      effProb * 0.55 +
+      normalizedCombinedVol * 0.25 +
+      (1 - normalizedExpGap) * 0.20;
+    return clamp(upsetProb, 0.15, 0.85);
+  }
+
+  // Standard seeded matchups
+  const matchupKey = getMatchupKey(favorite.seed, underdog.seed);
+  const rates = upsetRates ?? DEFAULT_UPSET_RATES;
+  const historicalRate = rates[matchupKey] ?? DEFAULT_UPSET_RATES[matchupKey] ?? 0.15;
 
   // Weighted upset probability formula
   const upsetProb =
