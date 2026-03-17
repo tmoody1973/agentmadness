@@ -42,12 +42,9 @@ export function MobileBracket({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Round tabs - horizontally scrollable */}
-      <div
-        className="shrink-0 border-b border-white/5 bg-[#0D1220] no-scrollbar"
-        style={{ overflowX: "scroll", WebkitOverflowScrolling: "touch" }}
-      >
-        <div className="flex gap-1.5 px-3 py-2" style={{ width: "max-content" }}>
+      {/* Round tabs - flex wrap grid */}
+      <div className="shrink-0 border-b border-white/5 bg-[#0D1220] px-3 py-2">
+        <div className="flex flex-wrap gap-1.5">
           {ROUND_ORDER.map((round) => {
             const count = games.filter((g) => g.round === round).length;
             const completed = games.filter(
@@ -56,22 +53,33 @@ export function MobileBracket({
             const isActive = activeRound === round;
             const isCurrent = tournament.currentRound === round;
 
+            // Short labels for mobile
+            const shortLabels: Record<string, string> = {
+              FIRST_FOUR: "First 4",
+              R64: "Rd 64",
+              R32: "Rd 32",
+              S16: "Sweet 16",
+              E8: "Elite 8",
+              F4: "Final 4",
+              CHAMP: "Champ",
+            };
+
             return (
               <button
                 key={round}
                 onClick={() => setActiveRound(round)}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors min-h-[44px]",
+                  "rounded-lg px-2.5 py-2 text-[11px] font-bold uppercase tracking-wide transition-colors",
                   isActive
                     ? "bg-[#00E5A0] text-[#0A0E17]"
                     : isCurrent
                       ? "bg-[#00E5A0]/20 text-[#00E5A0] border border-[#00E5A0]/30"
-                      : "bg-white/5 text-white/40 hover:text-white/60"
+                      : "bg-white/5 text-white/40 active:bg-white/10"
                 )}
               >
-                {ROUND_LABELS[round as keyof typeof ROUND_LABELS] ?? round}
+                {shortLabels[round] ?? round}
                 {count > 0 && (
-                  <span className="ml-1.5 text-[9px] opacity-60">
+                  <span className="ml-1 text-[9px] opacity-60">
                     {completed}/{count}
                   </span>
                 )}
