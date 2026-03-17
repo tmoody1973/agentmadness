@@ -60,7 +60,7 @@ Return ONLY the JSON array, no other text.`;
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -76,10 +76,13 @@ Return ONLY the JSON array, no other text.`;
   const text = data.content[0]?.text ?? "[]";
 
   try {
-    const profiles = JSON.parse(text) as TeamProfile[];
+    // Strip markdown code fences if present
+    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const profiles = JSON.parse(cleaned) as TeamProfile[];
     return profiles;
   } catch {
     console.warn("  [Profiles] Failed to parse Claude response, using defaults");
+    console.warn("  [Profiles] Raw response:", text.slice(0, 200));
     return batch.map(({ team }) => defaultProfile(team.teamId));
   }
 }
