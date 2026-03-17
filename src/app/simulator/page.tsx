@@ -335,34 +335,43 @@ export default function Home() {
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Header */}
         <header className="shrink-0 z-30 border-b border-white/5 bg-[#0A0E17]/90 backdrop-blur-sm">
-          <div className="flex items-center justify-between px-3 md:px-6 py-3">
-            <a href="/" className="flex items-center gap-2 md:gap-3">
-              <span className="text-xl md:text-2xl">🏀</span>
-              <div>
-                <h1 className="text-lg md:text-xl font-extrabold uppercase tracking-tight text-white leading-none">
-                  Agent<span className="text-[#00E5A0]">Madness</span>
-                </h1>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40 hidden sm:block">
-                  AI Tournament Simulator
-                </p>
-              </div>
+          {/* Top row: logo + sign in */}
+          <div className="flex items-center justify-between px-3 md:px-6 py-2">
+            <a href="/" className="flex items-center gap-2 shrink-0">
+              <span className="text-xl">🏀</span>
+              <h1 className="text-base md:text-xl font-extrabold uppercase tracking-tight text-white leading-none">
+                Agent<span className="text-[#00E5A0]">Madness</span>
+              </h1>
             </a>
 
-            {tournaments && tournaments.length > 1 && (
-              <TournamentToggle
-                tournaments={tournaments}
-                activeTournamentId={effectiveTournamentId ?? ""}
-                onSelect={setActiveTournamentId}
-              />
-            )}
-
-            <div className="flex items-center gap-2 md:gap-4">
-              <a href="/leaderboard" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors hidden sm:block">
+            {/* Desktop: toggle + leaderboard + auth in one row */}
+            <div className="hidden md:flex items-center gap-4">
+              {tournaments && tournaments.length > 1 && (
+                <TournamentToggle
+                  tournaments={tournaments}
+                  activeTournamentId={effectiveTournamentId ?? ""}
+                  onSelect={setActiveTournamentId}
+                />
+              )}
+              <a href="/leaderboard" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
                 Leaderboard
               </a>
               {!isSignedIn ? (
                 <SignInButton mode="modal">
-                  <button className="rounded-lg bg-[#00E5A0] px-3 md:px-4 py-2 text-xs md:text-sm font-bold uppercase tracking-wide text-[#0A0E17] hover:bg-[#00C890] transition-colors min-h-[44px]">
+                  <button className="rounded-lg bg-[#00E5A0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0A0E17] hover:bg-[#00C890] transition-colors">
+                    Sign in
+                  </button>
+                </SignInButton>
+              ) : (
+                <UserButton />
+              )}
+            </div>
+
+            {/* Mobile: just auth button */}
+            <div className="flex md:hidden items-center gap-2">
+              {!isSignedIn ? (
+                <SignInButton mode="modal">
+                  <button className="rounded-lg bg-[#00E5A0] px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-[#0A0E17] min-h-[36px]">
                     Sign in
                   </button>
                 </SignInButton>
@@ -371,6 +380,20 @@ export default function Home() {
               )}
             </div>
           </div>
+
+          {/* Mobile: toggle row below logo */}
+          {tournaments && tournaments.length > 1 && (
+            <div className="flex md:hidden items-center justify-between px-3 pb-2 gap-2">
+              <TournamentToggle
+                tournaments={tournaments}
+                activeTournamentId={effectiveTournamentId ?? ""}
+                onSelect={setActiveTournamentId}
+              />
+              <a href="/leaderboard" className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] shrink-0">
+                Board
+              </a>
+            </div>
+          )}
         </header>
 
         {/* Champion banner */}
