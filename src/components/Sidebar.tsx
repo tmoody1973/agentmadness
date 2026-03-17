@@ -608,6 +608,8 @@ interface SidebarProps {
   onClose: () => void;
   announcerEnabled: boolean;
   extraContent?: React.ReactNode;
+  /** "desktop" renders full aside with fixed width; "sheet" renders flat content for mobile bottom sheet */
+  variant?: "desktop" | "sheet";
 }
 
 export function Sidebar({
@@ -617,9 +619,67 @@ export function Sidebar({
   onClose,
   announcerEnabled,
   extraContent,
+  variant = "desktop",
 }: SidebarProps) {
   const mode =
     selectedTeam ? "team" : selectedGame ? "game" : "empty";
+
+  if (variant === "sheet") {
+    return (
+      <div className="flex flex-col">
+        <AnimatePresence mode="wait">
+          {mode === "game" && selectedGame && (
+            <motion.div
+              key={`game-${selectedGame._id}`}
+              className="flex flex-col"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <SidebarHeader title="Matchup Details" onClose={onClose} />
+              <GamePanel
+                game={selectedGame}
+                teams={teams}
+                announcerEnabled={announcerEnabled}
+              />
+            </motion.div>
+          )}
+
+          {mode === "team" && selectedTeam && (
+            <motion.div
+              key={`team-${selectedTeam._id}`}
+              className="flex flex-col"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <SidebarHeader title="Team Profile" onClose={onClose} />
+              <TeamPanel team={selectedTeam} />
+            </motion.div>
+          )}
+
+          {mode === "empty" && (
+            <motion.div
+              key="empty"
+              className="flex flex-col"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {extraContent && (
+                <div className="px-4 pt-4">
+                  {extraContent}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <aside

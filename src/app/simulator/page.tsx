@@ -9,7 +9,9 @@ import { TournamentToggle } from "../../components/TournamentToggle";
 import { SimControls } from "../../components/SimControls";
 import { StatsOverlay } from "../../components/StatsOverlay";
 import { Bracket } from "../../components/Bracket";
+import { MobileBracket } from "../../components/MobileBracket";
 import { Sidebar } from "../../components/Sidebar";
+import { MobileBottomSheet } from "../../components/MobileBottomSheet";
 import { LiveFeed } from "../../components/LiveFeed";
 import type { Game, Team } from "../../lib/types";
 
@@ -233,6 +235,9 @@ export default function Home() {
   // Whether to show the "Create My Bracket" CTA
   const showCreateCTA = isSignedIn && !hasMyTournament;
 
+  // Mobile bottom sheet is open when a game or team is selected
+  const isMobileSheetOpen = !!(selectedGame || selectedTeam);
+
   // Sync activeGender when tournaments load by detecting which gender is active
   useEffect(() => {
     if (!tournaments || !effectiveTournamentId) return;
@@ -309,20 +314,35 @@ export default function Home() {
 
   const { tournament, teams, games } = bracketState ?? {};
 
+  // Sidebar extra content (shared between desktop sidebar and mobile sheet)
+  const sidebarExtraContent = (
+    <>
+      {showCreateCTA && (
+        <CreateBracketCTA
+          gender={activeGender}
+          onCreated={handleTournamentCreated}
+        />
+      )}
+      {isMyBracket && !selectedGame && !selectedTeam && (
+        <SimSettings tournamentId={effectiveTournamentId!} />
+      )}
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-[#0A0E17] text-[#F8FAFC] overflow-hidden">
       {/* ── Main area ── */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Header */}
         <header className="shrink-0 z-30 border-b border-white/5 bg-[#0A0E17]/90 backdrop-blur-sm">
-          <div className="flex items-center justify-between px-6 py-3">
-            <a href="/" className="flex items-center gap-3">
-              <span className="text-2xl">🏀</span>
+          <div className="flex items-center justify-between px-3 md:px-6 py-3">
+            <a href="/" className="flex items-center gap-2 md:gap-3">
+              <span className="text-xl md:text-2xl">🏀</span>
               <div>
-                <h1 className="text-xl font-extrabold uppercase tracking-tight text-white leading-none">
+                <h1 className="text-lg md:text-xl font-extrabold uppercase tracking-tight text-white leading-none">
                   Agent<span className="text-[#00E5A0]">Madness</span>
                 </h1>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40 hidden sm:block">
                   AI Tournament Simulator
                 </p>
               </div>
@@ -336,14 +356,14 @@ export default function Home() {
               />
             )}
 
-            <div className="flex items-center gap-4">
-              <a href="/leaderboard" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
+            <div className="flex items-center gap-2 md:gap-4">
+              <a href="/leaderboard" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors hidden sm:block">
                 Leaderboard
               </a>
               {!isSignedIn ? (
                 <SignInButton mode="modal">
-                  <button className="rounded-lg bg-[#00E5A0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0A0E17] hover:bg-[#00C890] transition-colors">
-                    Sign in to Simulate
+                  <button className="rounded-lg bg-[#00E5A0] px-3 md:px-4 py-2 text-xs md:text-sm font-bold uppercase tracking-wide text-[#0A0E17] hover:bg-[#00C890] transition-colors min-h-[44px]">
+                    Sign in
                   </button>
                 </SignInButton>
               ) : (
@@ -355,7 +375,7 @@ export default function Home() {
 
         {/* Champion banner */}
         {tournament?.champion && (
-          <div className="shrink-0 z-20 px-4 py-2">
+          <div className="shrink-0 z-20 px-3 md:px-4 py-2">
             <div className="rounded-xl bg-[#FFB800]/10 border border-[#FFB800]/30 px-4 py-2 text-center text-sm font-bold uppercase tracking-wide text-[#FFB800]">
               🏆 Tournament Complete! Champion:{" "}
               {teams?.find((t) => t._id === tournament.champion)?.name ?? "Unknown"}
@@ -364,7 +384,7 @@ export default function Home() {
         )}
 
         {/* Controls */}
-        <div className="shrink-0 px-4 py-2 flex flex-col gap-2">
+        <div className="shrink-0 px-3 md:px-4 py-2 flex flex-col gap-2">
           {tournament && effectiveTournamentId && isMyBracket && (
             <SimControls
               tournament={tournament}
@@ -410,10 +430,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* Bracket scroll area */}
+        {/* Desktop bracket scroll area */}
         <div
           ref={bracketScrollRef}
-          className="flex-1 overflow-auto relative"
+          className="hidden lg:flex flex-1 overflow-auto relative"
         >
           {tournament && teams && games && (
             <div
@@ -435,37 +455,56 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* Mobile bracket */}
+        <div className="flex lg:hidden flex-1 overflow-hidden">
+          {tournament && teams && games && (
+            <MobileBracket
+              tournament={tournament}
+              teams={teams}
+              games={games}
+              onSelectGame={handleSelectGame}
+              onTeamClick={handleTeamClick}
+            />
+          )}
+        </div>
       </div>
 
-      {/* ── Sidebar ── */}
+      {/* ── Desktop Sidebar ── */}
       {teams && (
-        <Sidebar
-          selectedGame={selectedGame}
-          selectedTeam={selectedTeam}
-          teams={teams}
-          onClose={handleSidebarClose}
-          announcerEnabled={announcerEnabled}
-          extraContent={
-            <>
-              {/* Create My Bracket CTA */}
-              {showCreateCTA && (
-                <CreateBracketCTA
-                  gender={activeGender}
-                  onCreated={handleTournamentCreated}
-                />
-              )}
-              {/* Simulation settings panel for the user's own bracket */}
-              {isMyBracket && !selectedGame && !selectedTeam && (
-                <SimSettings tournamentId={effectiveTournamentId!} />
-              )}
-            </>
-          }
-        />
+        <div className="hidden lg:block shrink-0">
+          <Sidebar
+            selectedGame={selectedGame}
+            selectedTeam={selectedTeam}
+            teams={teams}
+            onClose={handleSidebarClose}
+            announcerEnabled={announcerEnabled}
+            extraContent={sidebarExtraContent}
+          />
+        </div>
       )}
 
-      {/* ── Zoom controls (floating, above sidebar) ── */}
+      {/* ── Mobile Bottom Sheet ── */}
+      {teams && (
+        <MobileBottomSheet
+          isOpen={isMobileSheetOpen}
+          onClose={handleSidebarClose}
+        >
+          <Sidebar
+            selectedGame={selectedGame}
+            selectedTeam={selectedTeam}
+            teams={teams}
+            onClose={handleSidebarClose}
+            announcerEnabled={announcerEnabled}
+            extraContent={sidebarExtraContent}
+            variant="sheet"
+          />
+        </MobileBottomSheet>
+      )}
+
+      {/* ── Zoom controls (floating, desktop only) ── */}
       <div
-        className="fixed bottom-4 z-20 flex items-center gap-1 rounded-xl border border-white/10 bg-[#111827]/90 backdrop-blur-md px-2 py-1.5 shadow-xl"
+        className="hidden lg:flex fixed bottom-4 z-20 items-center gap-1 rounded-xl border border-white/10 bg-[#111827]/90 backdrop-blur-md px-2 py-1.5 shadow-xl"
         style={{ right: 365 }}
       >
         <button

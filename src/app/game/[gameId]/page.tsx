@@ -247,13 +247,13 @@ function StatsComparisonTable({ teamA, teamB }: { teamA: Team; teamB: Team }) {
   ];
 
   return (
-    <div className="bg-[#111827] border border-white/5 rounded-xl overflow-hidden">
+    <div className="bg-[#111827] border border-white/5 rounded-xl overflow-x-auto">
       <div className="px-4 py-3 border-b border-white/5">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#94A3B8]">Key Stats Comparison</h2>
       </div>
 
       {/* Column headers */}
-      <div className="grid grid-cols-3 px-4 py-2 border-b border-white/5">
+      <div className="grid grid-cols-3 px-4 py-2 border-b border-white/5 min-w-[300px]">
         <span className="text-[11px] font-bold uppercase text-white truncate">{teamA.name}</span>
         <span className="text-[9px] font-semibold uppercase tracking-wider text-[#475569] text-center self-center" />
         <span className="text-[11px] font-bold uppercase text-white truncate text-right">{teamB.name}</span>

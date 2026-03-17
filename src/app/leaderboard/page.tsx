@@ -16,20 +16,20 @@ export default function LeaderboardPage() {
   return (
     <main className="min-h-screen bg-[#0A0E17] text-[#F8FAFC]">
       {/* Header */}
-      <header className="border-b border-white/5 px-6 py-4 bg-[#0A0E17]/90 backdrop-blur-sm">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🏆</span>
-            <div>
-              <h1 className="text-xl font-extrabold uppercase tracking-tight text-white">Leaderboard</h1>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
+      <header className="border-b border-white/5 px-4 md:px-6 py-4 bg-[#0A0E17]/90 backdrop-blur-sm">
+        <div className="flex items-center justify-between max-w-6xl mx-auto gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-xl md:text-2xl">🏆</span>
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-xl font-extrabold uppercase tracking-tight text-white">Leaderboard</h1>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] hidden sm:block">
                 Aggregate results across all AI simulations
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <a href="/simulator" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
-              ← Back to Bracket
+          <div className="flex items-center gap-2 md:gap-4 shrink-0">
+            <a href="/simulator" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors hidden sm:block">
+              ← Bracket
             </a>
             <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-[#111827] p-1">
               <button
@@ -57,10 +57,10 @@ export default function LeaderboardPage() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
         {/* Stats summary */}
         {upsetStats && (
-          <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
             <StatCard label="Total Simulations" value={upsetStats.totalRuns} />
             <StatCard label="Avg Upsets / Run" value={upsetStats.avgUpsets} />
             <StatCard label="Max Upsets" value={upsetStats.maxUpsets} highlight="danger" />
@@ -68,19 +68,19 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Championship leaderboard — main column */}
-          <div className="col-span-2">
+          <div className="lg:col-span-2">
             <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] mb-3">
               Championship Probability
             </h2>
-            <div className="rounded-xl border border-white/5 bg-[#151C2C] overflow-hidden">
+            <div className="rounded-xl border border-white/5 bg-[#151C2C] overflow-x-auto">
               {/* Header row */}
-              <div className="grid grid-cols-[40px_1fr_100px_100px_100px] gap-2 px-4 py-2 border-b border-white/5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#475569]">
+              <div className="grid grid-cols-[40px_1fr_70px_70px_90px] md:grid-cols-[40px_1fr_100px_100px_100px] gap-2 px-4 py-2 border-b border-white/5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#475569] min-w-[400px]">
                 <span>#</span>
                 <span>Team</span>
                 <span className="text-right">Titles</span>
-                <span className="text-right">Final Four</span>
+                <span className="text-right">F4</span>
                 <span className="text-right">Win %</span>
               </div>
 
@@ -93,10 +93,10 @@ export default function LeaderboardPage() {
               {leaderboard?.teams.map((team, idx) => (
                 <div
                   key={team.name}
-                  className="grid grid-cols-[40px_1fr_100px_100px_100px] gap-2 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors items-center"
+                  className="grid grid-cols-[40px_1fr_70px_70px_90px] md:grid-cols-[40px_1fr_100px_100px_100px] gap-2 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors items-center min-w-[400px]"
                 >
                   <span className="text-sm font-mono tabular-nums text-[#475569]">{idx + 1}</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <TeamLogo teamName={team.name} size={20} />
                     <span
                       className="flex h-5 w-6 shrink-0 items-center justify-center rounded-sm text-[10px] font-bold text-white"
@@ -109,7 +109,7 @@ export default function LeaderboardPage() {
                   <span className="text-right text-sm font-mono font-bold tabular-nums text-white">{team.championshipWins}</span>
                   <span className="text-right text-sm font-mono tabular-nums text-[#94A3B8]">{team.finalFourAppearances}</span>
                   <div className="flex items-center justify-end gap-2">
-                    <div className="w-12 h-1.5 rounded-full bg-[#1A2235] overflow-hidden">
+                    <div className="w-10 md:w-12 h-1.5 rounded-full bg-[#1A2235] overflow-hidden hidden sm:block">
                       <div
                         className="h-full rounded-full bg-[#FFB800]"
                         style={{ width: `${team.championshipPct}%` }}
