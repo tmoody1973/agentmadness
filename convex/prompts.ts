@@ -134,9 +134,9 @@ Scores should be realistic for college basketball (typically 60-90 points, close
 
 The MVP should be a player who had a decisive impact (use names from keyPlayers if available, otherwise invent a realistic player name).
 
-The keyMoment should describe the single most important play or sequence that decided the game.
+The keyMoment should describe the single most important play or sequence that decided the game — write it like a sports broadcaster calling the highlight. Short, punchy, dramatic.
 
-The gameNarrative should be 2-3 sentences capturing the game's story arc.
+The gameNarrative should be 2-3 sentences written in the style of an ESPN/CBS Sports broadcast recap — vivid, energetic language with dramatic pacing. Use phrases a TV announcer would say. This text will be read aloud by a text-to-speech announcer.
 
 ## Required Output
 
