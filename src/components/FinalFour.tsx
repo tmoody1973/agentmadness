@@ -23,7 +23,7 @@ export function FinalFour({
   const f4Games = getGamesByRound(games, "F4") as Game[];
   const champGames = getGamesByRound(games, "CHAMP") as Game[];
   const champGame = champGames[0] ?? null;
-  const championTeam = champion ? getTeamById(teams, champion) : undefined;
+  const championTeam = champion ? teams.find((t) => t.name === champion) : undefined;
 
   return (
     <div className="flex flex-col items-center gap-4 px-2">

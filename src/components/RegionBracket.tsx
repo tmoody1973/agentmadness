@@ -1,7 +1,6 @@
 "use client";
 
 import type { Game, Team } from "../lib/types";
-import { getGamesByRound, getGamesByRegion } from "../lib/utils";
 import { MatchupCard } from "./MatchupCard";
 import { cn } from "../lib/utils";
 
@@ -27,6 +26,94 @@ const REGION_COLORS: Record<string, string> = {
   "Sacramento 2": "#a855f7",
 };
 
+function getRegionGamesByRound(games: Game[], region: string, round: string): Game[] {
+  return games
+    .filter((g) => g.region === region && g.round === round)
+    .sort((a, b) => a.gameOrder - b.gameOrder);
+}
+
+/**
+ * Renders a single round column with bracket connector lines.
+ * Each game is vertically centered between its two feeder games from the previous round.
+ */
+function RoundColumn({
+  roundGames,
+  teams,
+  roundIndex,
+  onSelectGame,
+  selectedGameId,
+  direction,
+}: {
+  roundGames: Game[];
+  teams: Team[];
+  roundIndex: number;
+  onSelectGame: (gameId: string) => void;
+  selectedGameId?: string;
+  direction: "ltr" | "rtl";
+}) {
+  // Card height + spacing grows with rounds to center between feeders
+  // R64: 8 games tight, R32: 4 games, S16: 2 games, E8: 1 game
+  const cardHeight = 60; // approx px per matchup card
+  const gap = cardHeight * Math.pow(2, roundIndex) - cardHeight;
+
+  return (
+    <div
+      className="flex flex-col justify-around relative"
+      style={{
+        gap: `${gap}px`,
+        paddingTop: `${gap / 2}px`,
+      }}
+    >
+      {roundGames.map((game, idx) => (
+        <div key={game._id} className="relative flex items-center">
+          {/* Connector line going OUT to next round */}
+          {roundIndex < 3 && (
+            <div
+              className={cn(
+                "absolute top-1/2 w-4 border-t border-white/20",
+                direction === "ltr" ? "right-0 translate-x-full" : "left-0 -translate-x-full"
+              )}
+            />
+          )}
+
+          {/* Connector line coming IN from previous round */}
+          {roundIndex > 0 && (
+            <div
+              className={cn(
+                "absolute top-1/2 w-4 border-t border-white/20",
+                direction === "ltr" ? "left-0 -translate-x-full" : "right-0 translate-x-full"
+              )}
+            />
+          )}
+
+          {/* Vertical bracket merge lines (connects two feeders to one game) */}
+          {roundIndex > 0 && (
+            <div
+              className={cn(
+                "absolute border-white/20",
+                direction === "ltr" ? "left-0 -translate-x-4" : "right-0 translate-x-4"
+              )}
+              style={{
+                top: `calc(50% - ${gap / 2 + cardHeight / 2}px)`,
+                height: `${gap + cardHeight}px`,
+                borderLeftWidth: direction === "ltr" ? 1 : 0,
+                borderRightWidth: direction === "rtl" ? 1 : 0,
+              }}
+            />
+          )}
+
+          <MatchupCard
+            game={game}
+            teams={teams}
+            onSelect={onSelectGame}
+            isSelected={selectedGameId === game._id}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function RegionBracket({
   games,
   teams,
@@ -35,29 +122,25 @@ export function RegionBracket({
   onSelectGame,
   selectedGameId,
 }: RegionBracketProps) {
-  const regionGames = getGamesByRegion(games, regionName);
   const accentColor = REGION_COLORS[regionName] ?? "#6b7280";
 
-  const roundGames = REGION_ROUNDS.map((round) =>
-    getGamesByRound(regionGames as Game[], round)
+  const rounds = REGION_ROUNDS.map((round) =>
+    getRegionGamesByRound(games, regionName, round)
   );
 
-  const columns = direction === "rtl" ? [...roundGames].reverse() : roundGames;
-  const roundLabels =
-    direction === "rtl"
-      ? ["E8", "S16", "R32", "R64"]
-      : ["R64", "R32", "S16", "E8"];
-  const roundDisplayLabels: Record<string, string> = {
-    R64: "R64",
-    R32: "R32",
-    S16: "Sweet 16",
-    E8: "Elite 8",
-  };
+  // For RTL, reverse the visual order of columns
+  const displayRounds = direction === "rtl" ? [...rounds].reverse() : rounds;
+  const displayIndices = direction === "rtl" ? [3, 2, 1, 0] : [0, 1, 2, 3];
 
   return (
     <div className="flex flex-col gap-2">
       {/* Region header */}
-      <div className="flex items-center gap-2 px-1">
+      <div
+        className={cn(
+          "flex items-center gap-2 px-1",
+          direction === "rtl" && "justify-end"
+        )}
+      >
         <div
           className="h-3 w-3 rounded-full"
           style={{ backgroundColor: accentColor }}
@@ -70,46 +153,25 @@ export function RegionBracket({
         </span>
       </div>
 
-      {/* Bracket columns */}
+      {/* Bracket tree */}
       <div
         className={cn(
-          "flex gap-3 items-start",
+          "flex items-start",
           direction === "rtl" && "flex-row-reverse"
         )}
+        style={{ gap: "16px" }}
       >
-        {columns.map((colGames, colIdx) => {
-          const roundKey = roundLabels[colIdx];
-          const gamesCount = colGames.length;
-          // Vertical spacing grows with each round to create tree structure
-          const spacingClass = [
-            "gap-1",
-            "gap-9",
-            "gap-28",
-            "gap-56",
-          ][colIdx] ?? "gap-1";
-
-          return (
-            <div key={roundKey} className="flex flex-col items-stretch">
-              <div className="mb-1 text-center text-xs text-gray-600 font-medium">
-                {roundDisplayLabels[roundKey] ?? roundKey}
-              </div>
-              <div className={cn("flex flex-col", spacingClass)}>
-                {(colGames as Game[]).map((game) => (
-                  <MatchupCard
-                    key={game._id}
-                    game={game}
-                    teams={teams}
-                    onSelect={onSelectGame}
-                    isSelected={selectedGameId === game._id}
-                  />
-                ))}
-                {gamesCount === 0 && (
-                  <div className="text-xs text-gray-700 italic px-2">—</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {displayRounds.map((roundGames, displayIdx) => (
+          <RoundColumn
+            key={displayIdx}
+            roundGames={roundGames}
+            teams={teams}
+            roundIndex={displayIndices[displayIdx]}
+            onSelectGame={onSelectGame}
+            selectedGameId={selectedGameId}
+            direction={direction}
+          />
+        ))}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import ConfettiExplosion from "react-confetti-explosion";
 import type { Game, Team } from "../lib/types";
 import { getTeamById } from "../lib/utils";
@@ -13,38 +13,30 @@ interface MatchupCardProps {
   teams: Team[];
   onSelect?: (gameId: string) => void;
   isSelected?: boolean;
+  compact?: boolean;
 }
 
 const variants = {
   pending: {
-    opacity: 0.55,
-    scale: 0.97,
-    borderColor: "rgba(255,255,255,0.08)",
+    opacity: 0.5,
+    borderColor: "rgba(255,255,255,0.06)",
     boxShadow: "none",
   },
   simulating: {
     opacity: 1,
-    scale: 1,
     borderColor: "#f97316",
-    boxShadow: "0 0 12px 2px rgba(249,115,22,0.5)",
+    boxShadow: "0 0 10px 2px rgba(249,115,22,0.4)",
   },
   completed: {
     opacity: 1,
-    scale: 1,
-    borderColor: "rgba(34,197,94,0.35)",
+    borderColor: "rgba(34,197,94,0.25)",
     boxShadow: "none",
   },
   upset: {
     opacity: 1,
-    scale: 1,
     borderColor: "#ef4444",
-    boxShadow: "0 0 14px 3px rgba(239,68,68,0.55)",
+    boxShadow: "0 0 12px 2px rgba(239,68,68,0.45)",
   },
-};
-
-const shakeKeyframes = {
-  x: [0, -4, 4, -4, 4, -2, 2, 0],
-  transition: { duration: 0.5 },
 };
 
 export function MatchupCard({ game, teams, onSelect, isSelected }: MatchupCardProps) {
@@ -54,101 +46,88 @@ export function MatchupCard({ game, teams, onSelect, isSelected }: MatchupCardPr
   const [prevStatus, setPrevStatus] = useState(game.status);
 
   useEffect(() => {
-    if (
-      prevStatus !== "completed" &&
-      game.status === "completed" &&
-      game.isUpset
-    ) {
+    if (prevStatus !== "completed" && game.status === "completed" && game.isUpset) {
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+      const timer = setTimeout(() => setShowConfetti(false), 3000);
+      return () => clearTimeout(timer);
     }
     setPrevStatus(game.status);
   }, [game.status, game.isUpset, prevStatus]);
 
   const isUpset = game.status === "completed" && game.isUpset;
-  const variantKey: keyof typeof variants =
-    isUpset ? "upset" : (game.status as keyof typeof variants);
+  const variantKey = isUpset ? "upset" : (game.status as keyof typeof variants);
 
-  const winnerAScore =
-    game.winnerId === game.teamAId ? game.winnerScore : game.loserScore;
-  const winnerBScore =
-    game.winnerId === game.teamBId ? game.winnerScore : game.loserScore;
+  const scoreA = game.status === "completed"
+    ? (game.winnerId === game.teamAId ? game.winnerScore : game.loserScore)
+    : undefined;
+  const scoreB = game.status === "completed"
+    ? (game.winnerId === game.teamBId ? game.winnerScore : game.loserScore)
+    : undefined;
 
-  const animateProps = isUpset
-    ? { ...variants.upset, ...shakeKeyframes }
-    : variantKey;
+  const animateValues = isUpset
+    ? { ...variants.upset, x: [0, -3, 3, -3, 3, 0] }
+    : variants[variantKey];
 
   return (
     <motion.div
       className={cn(
-        "relative cursor-pointer rounded-lg border bg-gray-900 p-1 select-none overflow-visible",
-        isSelected && "ring-2 ring-blue-500"
+        "relative cursor-pointer rounded border bg-gray-900/80 select-none overflow-visible",
+        isSelected && "ring-1 ring-blue-500"
       )}
-      variants={variants}
-      animate={animateProps}
-      initial={variantKey}
+      animate={animateValues}
+      transition={isUpset ? { x: { duration: 0.4 } } : { duration: 0.3 }}
       onClick={() => onSelect?.(game._id)}
-      whileHover={{ scale: 1.02 }}
-      style={{ borderWidth: 1, minWidth: 160 }}
+      style={{ borderWidth: 1, width: 170 }}
     >
       {showConfetti && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
-          <ConfettiExplosion
-            force={0.5}
-            duration={2500}
-            particleCount={40}
-            width={300}
-          />
+          <ConfettiExplosion force={0.4} duration={2000} particleCount={30} width={200} />
         </div>
       )}
 
       {game.status === "simulating" && (
         <motion.div
-          className="absolute inset-0 rounded-lg bg-orange-500/10"
-          animate={{ opacity: [0.1, 0.3, 0.1] }}
+          className="absolute inset-0 rounded bg-orange-500/10"
+          animate={{ opacity: [0.1, 0.25, 0.1] }}
           transition={{ duration: 1, repeat: Infinity }}
         />
       )}
 
-      <TeamPill
-        team={teamA}
-        score={game.status === "completed" ? winnerAScore : undefined}
-        isWinner={game.winnerId === game.teamAId}
-        isEliminated={
-          game.status === "completed" && game.winnerId !== game.teamAId
-        }
-      />
+      {/* Team A */}
+      <div className={cn(
+        "flex items-center justify-between px-1.5 py-0.5",
+        game.status === "completed" && game.winnerId === game.teamAId && "bg-green-500/10",
+        game.status === "completed" && game.winnerId !== game.teamAId && "opacity-40",
+      )}>
+        <TeamPill team={teamA} isWinner={game.winnerId === game.teamAId} />
+        {scoreA !== undefined && (
+          <span className={cn(
+            "text-xs font-mono font-bold tabular-nums",
+            game.winnerId === game.teamAId ? "text-green-400" : "text-gray-500"
+          )}>{scoreA}</span>
+        )}
+      </div>
 
-      <div className="mx-2 h-px bg-white/5" />
+      <div className="h-px bg-white/5" />
 
-      <TeamPill
-        team={teamB}
-        score={game.status === "completed" ? winnerBScore : undefined}
-        isWinner={game.winnerId === game.teamBId}
-        isEliminated={
-          game.status === "completed" && game.winnerId !== game.teamBId
-        }
-      />
+      {/* Team B */}
+      <div className={cn(
+        "flex items-center justify-between px-1.5 py-0.5",
+        game.status === "completed" && game.winnerId === game.teamBId && "bg-green-500/10",
+        game.status === "completed" && game.winnerId !== game.teamBId && "opacity-40",
+      )}>
+        <TeamPill team={teamB} isWinner={game.winnerId === game.teamBId} />
+        {scoreB !== undefined && (
+          <span className={cn(
+            "text-xs font-mono font-bold tabular-nums",
+            game.winnerId === game.teamBId ? "text-green-400" : "text-gray-500"
+          )}>{scoreB}</span>
+        )}
+      </div>
 
-      {game.status === "pending" && (game.scheduledTime || game.tvChannel) && (
-        <div className="mt-1 flex flex-wrap gap-x-2 px-2 pb-1">
-          {game.tvChannel && (
-            <span className="text-xs text-gray-500">{game.tvChannel}</span>
-          )}
-          {game.scheduledTime && (
-            <span className="text-xs text-gray-500">{game.scheduledTime}</span>
-          )}
-        </div>
-      )}
-
-      {game.status === "completed" && game.mvp && (
-        <div className="mt-1 px-2 pb-1">
-          <span className="text-xs text-yellow-400">⭐ {game.mvp}</span>
-        </div>
-      )}
-
+      {/* Upset badge */}
       {isUpset && (
-        <div className="absolute -top-2 -right-2 rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white shadow-lg">
+        <div className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1 py-0 text-[9px] font-bold text-white shadow">
           UPSET
         </div>
       )}
