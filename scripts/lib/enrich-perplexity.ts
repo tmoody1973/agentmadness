@@ -54,7 +54,7 @@ Format with markdown headers (##) for each section. Be specific — use real pla
           content: prompt,
         },
       ],
-      max_tokens: 800,
+      max_tokens: 1500,
     }),
   });
 
