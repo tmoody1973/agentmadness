@@ -1,266 +1,432 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useQuery } from "convex/react";
-import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
-import { TournamentToggle } from "../components/TournamentToggle";
-import { SimControls } from "../components/SimControls";
-import { StatsOverlay } from "../components/StatsOverlay";
-import { Bracket } from "../components/Bracket";
-import { Sidebar } from "../components/Sidebar";
-import type { Game, Team } from "../lib/types";
-
-const ZOOM_MIN = 0.4;
-const ZOOM_MAX = 1.5;
-const ZOOM_DEFAULT = 0.75;
-const ZOOM_STEP = 0.1;
-
-export default function Home() {
-  const { isSignedIn } = useAuth();
-  const [activeTournamentId, setActiveTournamentId] = useState<string | null>(null);
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [announcerEnabled, setAnnouncerEnabled] = useState(false);
-  const [zoom, setZoom] = useState(ZOOM_DEFAULT);
-
-  const bracketScrollRef = useRef<HTMLDivElement>(null);
-
-  const tournaments = useQuery(api.bracket.getTournaments, {});
-
-  const effectiveTournamentId =
-    activeTournamentId ?? tournaments?.[0]?._id ?? null;
-
-  const bracketState = useQuery(
-    api.bracket.getBracketState,
-    effectiveTournamentId
-      ? { tournamentId: effectiveTournamentId as Id<"tournaments"> }
-      : "skip"
-  );
-
-  const upsets = useQuery(
-    api.bracket.getUpsets,
-    effectiveTournamentId
-      ? { tournamentId: effectiveTournamentId as Id<"tournaments"> }
-      : "skip"
-  );
-
-  const isLoading = !tournaments || (effectiveTournamentId && !bracketState);
-
-  const selectedGame: Game | null =
-    selectedGameId && bracketState?.games
-      ? (bracketState.games.find((g: Game) => g._id === selectedGameId) ?? null)
-      : null;
-
-  // Zoom with Ctrl + mouse wheel
-  useEffect(() => {
-    const el = bracketScrollRef.current;
-    if (!el) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-      setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round((z + delta) * 10) / 10)));
-    };
-
-    el.addEventListener("wheel", handleWheel, { passive: false });
-    return () => el.removeEventListener("wheel", handleWheel);
-  }, []);
-
-  const handleSelectGame = useCallback((gameId: string) => {
-    setSelectedGameId(gameId);
-    setSelectedTeam(null);
-  }, []);
-
-  const handleTeamClick = useCallback((team: Team) => {
-    setSelectedTeam(team);
-    setSelectedGameId(null);
-  }, []);
-
-  const handleSidebarClose = useCallback(() => {
-    setSelectedGameId(null);
-    setSelectedTeam(null);
-  }, []);
-
-  const handleFitZoom = useCallback(() => {
-    setZoom(ZOOM_DEFAULT);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A0E17]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 rounded-full border-4 border-[#00E5A0] border-t-transparent animate-spin" />
-          <p className="text-[#94A3B8] text-sm font-medium uppercase tracking-widest">Loading bracket…</p>
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-[#0A0E17] text-[#F8FAFC] scroll-smooth">
+      {/* Navigation */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0A0E17]/80 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <a href="/" className="text-[#00E5A0] font-extrabold text-lg tracking-tight uppercase">
+            AgentMadness
+          </a>
+          <nav className="flex items-center gap-6">
+            <a href="/simulator" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
+              Simulator
+            </a>
+            <a href="/leaderboard" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
+              Leaderboard
+            </a>
+            <a href="#about" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
+              About
+            </a>
+            <a href="/simulator" className="text-sm bg-[#00E5A0] text-[#0A0E17] font-bold uppercase tracking-wider px-4 py-1.5 rounded hover:bg-[#00c98e] transition-colors">
+              Launch →
+            </a>
+          </nav>
         </div>
-      </div>
-    );
-  }
+      </header>
 
-  if (!tournaments || tournaments.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A0E17]">
-        <div className="text-center">
-          <div className="text-5xl mb-4">🏀</div>
-          <h1 className="text-2xl font-extrabold uppercase tracking-tight text-white mb-2">No Tournaments Found</h1>
-          <p className="text-[#94A3B8] text-sm">
-            Run the seed script to initialize the tournament data.
+      {/* ═══════════════════════════════════════════════════════════════════════
+          HERO — full-bleed image with overlay
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative min-h-[90vh] flex items-end overflow-hidden">
+        {/* Background image */}
+        <img
+          src="/images/bailey-burton-o5UlVmTwVz8-unsplash.jpg"
+          alt="NCAA basketball on court"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E17] via-[#0A0E17]/70 to-[#0A0E17]/30" />
+        {/* Teal accent glow */}
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#00E5A0]/10 rounded-full blur-[120px]" />
+
+        <div className="relative max-w-6xl mx-auto px-6 pb-16 pt-32 w-full">
+          <p className="text-[#00E5A0] text-xs font-semibold uppercase tracking-[0.25em] mb-4">
+            🏀 AI-Powered Tournament Simulator
+          </p>
+
+          <h1 className="text-7xl md:text-9xl font-extrabold uppercase tracking-tighter text-white leading-[0.85] mb-6">
+            Agent<br />
+            <span className="text-[#00E5A0]">Madness</span>
+          </h1>
+
+          <p className="text-xl md:text-2xl text-white/70 max-w-xl mb-10 leading-relaxed font-light">
+            68 teams become AI agents. Claude simulates every game.
+            ElevenLabs calls every upset. The bracket fills in real time.
+          </p>
+
+          <div className="flex flex-wrap gap-4 mb-12">
+            <a
+              href="/simulator"
+              className="inline-flex items-center gap-2 bg-[#00E5A0] text-[#0A0E17] font-extrabold uppercase tracking-wider px-8 py-4 rounded-lg text-base hover:bg-[#00c98e] transition-all hover:scale-105"
+            >
+              Launch Simulator →
+            </a>
+            <a
+              href="/leaderboard"
+              className="inline-flex items-center gap-2 border-2 border-white/20 text-white font-bold uppercase tracking-wider px-8 py-4 rounded-lg text-base hover:border-white/40 hover:bg-white/5 transition-all"
+            >
+              View Leaderboard
+            </a>
+          </div>
+
+          {/* Stats row */}
+          <div className="flex flex-wrap gap-6">
+            {[
+              { value: "136", label: "Teams" },
+              { value: "134", label: "Games" },
+              { value: "$0.22", label: "Per Run" },
+              { value: "40+", label: "Years of Data" },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <p className="text-3xl md:text-4xl font-mono font-extrabold text-[#00E5A0]">
+                  {stat.value}
+                </p>
+                <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] mt-0.5">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          HOW IT WORKS — 3 cards with accent image
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="how-it-works" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-[#00E5A0] text-xs font-semibold uppercase tracking-[0.25em] mb-3">
+            /How It Works
+          </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight text-white mb-4">
+            Three Layers.<br />
+            <span className="text-white/40">One Tournament.</span>
+          </h2>
+          <p className="text-white/50 text-lg max-w-2xl mb-14">
+            Each team is a data profile. Each game is a Claude API call.
+            The bracket is a tree. The agents are the leaves. Claude is the wind.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                number: "01",
+                title: "Team Agents",
+                color: "#00E5A0",
+                description:
+                  "Each team carries its full identity: KenPom efficiency ratings, key players, play style, volatility score, and Perplexity-enriched scouting reports. No two agents are alike.",
+              },
+              {
+                number: "02",
+                title: "Referee Engine",
+                color: "#FFB800",
+                description:
+                  "Claude analyzes both team profiles, applies our data-driven upset algorithm, and simulates a realistic game — scores, MVP, key moment, and a broadcast-quality narrative.",
+              },
+              {
+                number: "03",
+                title: "Live Bracket",
+                color: "#FF3B5C",
+                description:
+                  "Results push to every connected client in real time via Convex. The bracket animates. Upsets shake the screen. ElevenLabs v3 reads every result like a sports announcer.",
+              },
+            ].map((step) => (
+              <div
+                key={step.number}
+                className="group bg-[#1C2636] border border-white/5 rounded-2xl p-8 hover:border-white/15 transition-all duration-300"
+              >
+                <div
+                  className="text-5xl font-mono font-extrabold mb-6 opacity-30 group-hover:opacity-60 transition-opacity"
+                  style={{ color: step.color }}
+                >
+                  {step.number}
+                </div>
+                <h3 className="text-xl font-extrabold uppercase tracking-tight text-white mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          FULL-WIDTH PHOTO BREAK — game action
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative h-[40vh] md:h-[50vh] overflow-hidden">
+        <img
+          src="/images/logan-weaver-lgnwvr-xtPs2_MlPYc-unsplash.jpg"
+          alt="Basketball game action"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0A0E17]/90 via-[#0A0E17]/40 to-[#0A0E17]/90" />
+        <div className="relative h-full flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-5xl md:text-7xl font-extrabold uppercase tracking-tighter text-white">
+              Proven Stats.
+            </p>
+            <p className="text-5xl md:text-7xl font-extrabold uppercase tracking-tighter text-[#FFB800]">
+              Real Results.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          THE STACK
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="stack" className="relative py-24 px-6 overflow-hidden">
+        {/* Background arena atmosphere */}
+        <img
+          src="/images/luke-miller-6IoovRPa93g-unsplash.jpg"
+          alt="Basketball arena"
+          className="absolute inset-0 w-full h-full object-cover opacity-10"
+        />
+        <div className="absolute inset-0 bg-[#0A0E17]/90" />
+
+        <div className="relative max-w-6xl mx-auto">
+          <p className="text-[#00E5A0] text-xs font-semibold uppercase tracking-[0.25em] mb-3">
+            /The Stack
+          </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight text-white mb-2">
+            No Agent Framework.
+          </h2>
+          <p className="text-white/40 text-lg mb-12">
+            Deliberate choice. Raw API calls. Full control.
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {[
+              { name: "Next.js 16", role: "Frontend", desc: "App Router + React 19" },
+              { name: "Convex", role: "Real-Time DB", desc: "Zero-latency push" },
+              { name: "Claude AI", role: "Simulation", desc: "Sonnet via fetch()" },
+              { name: "ElevenLabs", role: "TTS v3", desc: "Broadcast announcer" },
+            ].map((tech) => (
+              <div
+                key={tech.name}
+                className="bg-white/5 border border-white/10 rounded-xl px-5 py-5 hover:border-[#00E5A0]/30 transition-colors"
+              >
+                <p className="font-extrabold text-white text-lg uppercase tracking-tight">{tech.name}</p>
+                <p className="text-[10px] text-[#00E5A0] uppercase tracking-[0.15em] mt-1 font-semibold">
+                  {tech.role}
+                </p>
+                <p className="text-xs text-white/30 mt-1">{tech.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-3 text-sm">
+            {[
+              "Kaggle Data",
+              "Perplexity Enrichment",
+              "Bradley-Terry Model",
+              "KenPom Analytics",
+              "Clerk Auth",
+              "Vercel Deploy",
+            ].map((tag) => (
+              <span
+                key={tag}
+                className="bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-white/40 text-xs font-medium"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          FEATURES — 2x3 grid
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="features" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-[#00E5A0] text-xs font-semibold uppercase tracking-[0.25em] mb-3">
+            /Features
+          </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tight text-white mb-14">
+            Built for the Bracket.
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "🎯",
+                title: "Upset Algorithm",
+                description: "5-signal ensemble: historical rates, efficiency gap, volatility, experience, and AI-interpreted momentum. Cinderellas happen here.",
+                accent: "#00E5A0",
+              },
+              {
+                icon: "🎙️",
+                title: "AI Announcer",
+                description: "ElevenLabs v3 TTS reads every result with real broadcast energy. Upsets get the full treatment.",
+                accent: "#FFB800",
+              },
+              {
+                icon: "⚡",
+                title: "Real-Time Bracket",
+                description: "Convex reactive push. Zero polling. The bracket updates live as each game resolves.",
+                accent: "#FF3B5C",
+              },
+              {
+                icon: "🏆",
+                title: "Leaderboard",
+                description: "Track champions across all simulations. Championship probability, Final Four rates, Cinderella tracking.",
+                accent: "#00E5A0",
+              },
+              {
+                icon: "🔍",
+                title: "AI Scouting Reports",
+                description: "Perplexity pulls current injuries, streaks, and analyst takes. Claude generates style profiles.",
+                accent: "#FFB800",
+              },
+              {
+                icon: "📊",
+                title: "Kaggle Competition",
+                description: "Our ensemble model generates tournament predictions. Bradley-Terry + efficiency + seeds = competitive submission.",
+                accent: "#FF3B5C",
+              },
+            ].map((feature) => (
+              <div
+                key={feature.title}
+                className="group bg-[#1C2636] border border-white/5 rounded-2xl p-7 hover:border-white/15 transition-all duration-300"
+              >
+                <div className="text-3xl mb-4">{feature.icon}</div>
+                <h3
+                  className="text-base font-extrabold uppercase tracking-tight mb-2"
+                  style={{ color: feature.accent }}
+                >
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          GAME ACTION PHOTO BREAK
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative h-[35vh] overflow-hidden">
+        <img
+          src="/images/logan-weaver-lgnwvr-31zFmHWBaDE-unsplash.jpg"
+          alt="Basketball tip-off"
+          className="absolute inset-0 w-full h-full object-cover object-top"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E17] via-transparent to-[#0A0E17]/60" />
+        <div className="relative h-full flex items-end justify-center pb-10">
+          <p className="text-4xl md:text-5xl font-extrabold uppercase tracking-tighter text-white text-center">
+            Both Brackets. <span className="text-[#00E5A0]">136 Teams.</span>
           </p>
         </div>
-      </div>
-    );
-  }
+      </section>
 
-  const { tournament, teams, games } = bracketState ?? {};
+      {/* ═══════════════════════════════════════════════════════════════════════
+          BUILT BY
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section id="about" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-[#00E5A0] text-xs font-semibold uppercase tracking-[0.25em] mb-3">
+            /Built By
+          </p>
 
-  return (
-    <div className="flex h-screen bg-[#0A0E17] text-[#F8FAFC] overflow-hidden">
-      {/* ── Main area ── */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header */}
-        <header className="shrink-0 z-30 border-b border-white/5 bg-[#0A0E17]/90 backdrop-blur-sm">
-          <div className="flex items-center justify-between px-6 py-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🏀</span>
-              <div>
-                <h1 className="text-xl font-extrabold uppercase tracking-tight text-white leading-none">
-                  March Madness
-                </h1>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#00E5A0]">
-                  Agent Simulator
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8">
+            <div className="bg-[#1C2636] border border-white/5 rounded-2xl p-10">
+              <h2 className="text-4xl font-extrabold uppercase tracking-tight text-white mb-1">
+                Tarik Moody
+              </h2>
+              <p className="text-sm text-white/40 uppercase tracking-wider mb-8 font-medium">
+                Director of Strategy & Innovation · Radio Milwaukee
+              </p>
+
+              <blockquote className="border-l-3 border-[#00E5A0] pl-6 mb-8">
+                <p className="text-xl italic text-white/60 leading-relaxed">
+                  &ldquo;The bracket is a tree. The agents are the leaves.
+                  Claude is the wind.&rdquo;
                 </p>
+              </blockquote>
+
+              <p className="text-sm text-white/40 leading-relaxed mb-8">
+                I call my development methodology &ldquo;bumwad coding&rdquo; — named after the tracing paper architects use to iterate on designs.
+                Every project starts with a blueprint. Only after the architecture is solid do I start writing code, usually with Claude Code as my pair programmer.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <a href="https://tarikmoody.com" target="_blank" rel="noopener noreferrer"
+                  className="text-sm border border-white/15 text-white/60 hover:text-white hover:border-white/30 font-semibold uppercase tracking-wider px-5 py-2.5 rounded-lg transition-colors">
+                  tarikmoody.com
+                </a>
+                <a href="https://theintersection.fm" target="_blank" rel="noopener noreferrer"
+                  className="text-sm border border-white/15 text-white/60 hover:text-white hover:border-white/30 font-semibold uppercase tracking-wider px-5 py-2.5 rounded-lg transition-colors">
+                  The Intersection
+                </a>
+                <a href="https://x.com/tarikmoody" target="_blank" rel="noopener noreferrer"
+                  className="text-sm border border-white/15 text-white/60 hover:text-white hover:border-white/30 font-semibold uppercase tracking-wider px-5 py-2.5 rounded-lg transition-colors">
+                  @tarikmoody
+                </a>
               </div>
             </div>
 
-            {tournaments && tournaments.length > 1 && (
-              <TournamentToggle
-                tournaments={tournaments}
-                activeTournamentId={effectiveTournamentId ?? ""}
-                onSelect={setActiveTournamentId}
+            {/* Ball close-up accent photo */}
+            <div className="relative rounded-2xl overflow-hidden hidden md:block">
+              <img
+                src="/images/ben-hershey-5nk3wSFUWZc-unsplash.jpg"
+                alt="NCAA basketball close-up"
+                className="w-full h-full object-cover"
               />
-            )}
-
-            <div className="flex items-center gap-4">
-              <a href="/leaderboard" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
-                Leaderboard
-              </a>
-              {!isSignedIn ? (
-                <SignInButton mode="modal">
-                  <button className="rounded-lg bg-[#00E5A0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0A0E17] hover:bg-[#00C890] transition-colors">
-                    Sign in to Simulate
-                  </button>
-                </SignInButton>
-              ) : (
-                <UserButton />
-              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E17]/60 to-transparent" />
             </div>
           </div>
-        </header>
-
-        {/* Champion banner */}
-        {tournament?.champion && (
-          <div className="shrink-0 z-20 px-4 py-2">
-            <div className="rounded-xl bg-[#FFB800]/10 border border-[#FFB800]/30 px-4 py-2 text-center text-sm font-bold uppercase tracking-wide text-[#FFB800]">
-              🏆 Tournament Complete! Champion:{" "}
-              {teams?.find((t) => t._id === tournament.champion)?.name ?? "Unknown"}
-            </div>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="shrink-0 px-4 py-2 flex flex-col gap-2">
-          {tournament && effectiveTournamentId && (
-            <SimControls
-              tournament={tournament}
-              tournamentId={effectiveTournamentId}
-              announcerEnabled={announcerEnabled}
-              onAnnouncerToggle={setAnnouncerEnabled}
-              upsetCount={tournament.upsetCount}
-            />
-          )}
-
-          {tournament && teams && upsets !== undefined && (
-            <StatsOverlay
-              tournament={tournament}
-              teams={teams}
-              upsets={upsets as Game[]}
-            />
-          )}
         </div>
+      </section>
 
-        {/* Bracket scroll area */}
-        <div
-          ref={bracketScrollRef}
-          className="flex-1 overflow-auto relative"
-        >
-          {tournament && teams && games && (
-            <div
-              style={{
-                transform: `scale(${zoom})`,
-                transformOrigin: "top center",
-                // Ensure the transformed div takes up real space so scroll works
-                // by manually computing the scaled dimensions
-                width: `${100 / zoom}%`,
-                minHeight: `${100 / zoom}%`,
-              }}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          CTA BANNER
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-r from-[#00E5A0]/10 via-[#FFB800]/5 to-[#FF3B5C]/10 border border-white/10 rounded-2xl p-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tighter text-white mb-4">
+              Your Simulation<br />
+              <span className="text-[#00E5A0]">Starts Now.</span>
+            </h2>
+            <p className="text-white/50 text-lg mb-8 max-w-lg mx-auto">
+              68 teams. 67 games. Every matchup simulated by AI.
+              Every upset earned by data. Every story told in real time.
+            </p>
+            <a
+              href="/simulator"
+              className="inline-flex items-center gap-2 bg-[#00E5A0] text-[#0A0E17] font-extrabold uppercase tracking-wider px-10 py-5 rounded-xl text-lg hover:bg-[#00c98e] transition-all hover:scale-105"
             >
-              <Bracket
-                tournament={tournament}
-                teams={teams}
-                games={games}
-                onSelectGame={handleSelectGame}
-                onTeamClick={handleTeamClick}
-                selectedGameId={selectedGameId ?? undefined}
-              />
-            </div>
-          )}
+              Launch AgentMadness →
+            </a>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Sidebar ── */}
-      {teams && (
-        <Sidebar
-          selectedGame={selectedGame}
-          selectedTeam={selectedTeam}
-          teams={teams}
-          onClose={handleSidebarClose}
-          announcerEnabled={announcerEnabled}
-        />
-      )}
-
-      {/* ── Zoom controls (floating, above sidebar) ── */}
-      <div
-        className="fixed bottom-4 z-20 flex items-center gap-1 rounded-xl border border-white/10 bg-[#111827]/90 backdrop-blur-md px-2 py-1.5 shadow-xl"
-        style={{ right: 365 }}
-      >
-        <button
-          onClick={() => setZoom((z) => Math.min(ZOOM_MAX, Math.round((z + ZOOM_STEP) * 10) / 10))}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#94A3B8] hover:bg-white/10 hover:text-white transition-colors text-sm font-bold"
-          title="Zoom in"
-        >
-          +
-        </button>
-        <span className="text-[11px] font-mono tabular-nums text-[#94A3B8] min-w-[36px] text-center">
-          {Math.round(zoom * 100)}%
-        </span>
-        <button
-          onClick={() => setZoom((z) => Math.max(ZOOM_MIN, Math.round((z - ZOOM_STEP) * 10) / 10))}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#94A3B8] hover:bg-white/10 hover:text-white transition-colors text-sm font-bold"
-          title="Zoom out"
-        >
-          −
-        </button>
-        <div className="w-px h-4 bg-white/10 mx-1" />
-        <button
-          onClick={handleFitZoom}
-          className="rounded-lg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] hover:bg-white/10 hover:text-white transition-colors"
-          title="Reset zoom"
-        >
-          Fit
-        </button>
-      </div>
+      {/* Footer */}
+      <footer className="py-10 px-6 border-t border-white/5">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <span className="text-[#00E5A0] font-extrabold uppercase tracking-tight">
+            AgentMadness
+          </span>
+          <div className="flex items-center gap-6 text-sm text-white/30">
+            <a href="/simulator" className="hover:text-white/60 transition-colors">Simulator</a>
+            <a href="/leaderboard" className="hover:text-white/60 transition-colors">Leaderboard</a>
+            <a href="#about" className="hover:text-white/60 transition-colors">About</a>
+          </div>
+          <p className="text-xs text-white/20">
+            Built with Claude AI · March 2026
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

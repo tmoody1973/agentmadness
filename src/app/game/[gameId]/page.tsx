@@ -514,7 +514,7 @@ function NotFoundState() {
         <p className="text-4xl font-extrabold text-white">404</p>
         <p className="text-[#94A3B8] text-sm">Game not found.</p>
         <Link
-          href="/"
+          href="/simulator"
           className="text-[#00E5A0] text-sm font-semibold hover:underline underline-offset-2"
         >
           Back to Bracket
@@ -548,7 +548,7 @@ export default function GameDetailPage() {
       <div className="sticky top-0 z-10 bg-[#0A0E17]/95 backdrop-blur border-b border-white/5">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between gap-4">
           <Link
-            href="/"
+            href="/simulator"
             className="flex items-center gap-1.5 text-[#475569] hover:text-white transition-colors text-sm font-medium shrink-0"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

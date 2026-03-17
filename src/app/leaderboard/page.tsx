@@ -28,7 +28,7 @@ export default function LeaderboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a href="/" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
+            <a href="/simulator" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
               ← Back to Bracket
             </a>
             <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-[#111827] p-1">
