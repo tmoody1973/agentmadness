@@ -13,6 +13,7 @@ import { MobileBracket } from "../../components/MobileBracket";
 import { Sidebar } from "../../components/Sidebar";
 import { MobileBottomSheet } from "../../components/MobileBottomSheet";
 import { LiveFeed } from "../../components/LiveFeed";
+import { OnboardingModal } from "../../components/OnboardingModal";
 import type { Game, Team } from "../../lib/types";
 
 const ZOOM_MIN = 0.4;
@@ -331,6 +332,8 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-[#0A0E17] text-[#F8FAFC] overflow-hidden">
+      <OnboardingModal />
+
       {/* ── Main area ── */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Header */}
