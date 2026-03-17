@@ -28,9 +28,44 @@ export function LiveFeed({ games, teams, onSelectGame }: LiveFeedProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const prevGamesRef = useRef<Map<string, string>>(new Map());
+  const initializedRef = useRef(false);
 
-  // Detect game status changes and build feed
+  // Seed with already-completed games on first render
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    const existingItems: FeedItem[] = [];
+    for (const game of games) {
+      if (game.status === "completed") {
+        const winner = getTeamById(teams, game.winnerId);
+        const loserId = game.teamAId === game.winnerId ? game.teamBId : game.teamAId;
+        const loser = getTeamById(teams, loserId);
+        existingItems.push({
+          id: `${game._id}-done`,
+          game,
+          teamA: getTeamById(teams, game.teamAId),
+          teamB: getTeamById(teams, game.teamBId),
+          winner,
+          loser,
+          type: game.isUpset ? "upset" : "completed",
+          timestamp: game._creationTime ?? Date.now(),
+        });
+        prevGamesRef.current.set(game._id, "completed");
+      } else {
+        prevGamesRef.current.set(game._id, game.status);
+      }
+    }
+
+    if (existingItems.length > 0) {
+      existingItems.sort((a, b) => a.game.gameOrder - b.game.gameOrder);
+      setFeedItems(existingItems.slice(-20));
+    }
+  }, [games, teams]);
+
+  // Detect game status changes for live updates
+  useEffect(() => {
+    if (!initializedRef.current) return;
     const prevStatuses = prevGamesRef.current;
     const newItems: FeedItem[] = [];
 

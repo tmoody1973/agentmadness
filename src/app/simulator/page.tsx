@@ -446,12 +446,12 @@ export default function Home() {
         </div>
 
         {/* Live feed */}
-        {games && teams && (tournament?.status === "simulating" || tournament?.status === "completed") && (
+        {games && teams && (
           <div className="shrink-0 border-b border-white/5 bg-[#0D1220]">
             <div className="flex items-center gap-2 px-4 pt-2 pb-1">
-              <div className="h-2 w-2 rounded-full bg-[#FF8C00] animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#FF8C00]">
-                Live Feed
+              <div className={`h-2 w-2 rounded-full ${tournament?.status === "simulating" ? "bg-[#FF8C00] animate-pulse" : "bg-[#00E5A0]"}`} />
+              <span className={`text-[10px] font-bold uppercase tracking-[0.15em] ${tournament?.status === "simulating" ? "text-[#FF8C00]" : "text-[#94A3B8]"}`}>
+                {tournament?.status === "simulating" ? "Live Feed" : "Game Feed"}
               </span>
             </div>
             <LiveFeed
