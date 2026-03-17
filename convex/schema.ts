@@ -39,6 +39,10 @@ export default defineSchema({
     keyPlayers: v.string(),
     styleTraits: v.array(v.string()),
     perplexityContext: v.optional(v.string()),
+    coach: v.optional(v.string()),
+    kenPomRank: v.optional(v.number()),
+    apRank: v.optional(v.number()),
+    compositeRank: v.optional(v.number()),
     eliminated: v.boolean(),
     eliminatedRound: v.optional(v.string()),
   })

@@ -8,6 +8,7 @@ import { getTeamById } from "../lib/utils";
 import { getSeedColor, ROUND_LABELS } from "../lib/types";
 import { AudioPlayer } from "./AudioPlayer";
 import { TeamLogo } from "./TeamLogo";
+import { MarkdownContent } from "./MarkdownContent";
 
 // ---------------------------------------------------------------------------
 // Win probability helpers
@@ -402,7 +403,9 @@ function GamePanel({
             <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">🔍 {teamA.name}</div>
             <span className="text-[8px] text-[#00E5A0] bg-[#00E5A0]/10 rounded px-1 py-0.5 font-medium">AI Scout</span>
           </div>
-          <p className="text-[11px] text-[#94A3B8] leading-relaxed line-clamp-3">{teamA.perplexityContext}</p>
+          <div className="line-clamp-4">
+            <MarkdownContent content={teamA.perplexityContext} />
+          </div>
         </div>
       )}
       {teamB?.perplexityContext && (
@@ -411,7 +414,9 @@ function GamePanel({
             <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">🔍 {teamB.name}</div>
             <span className="text-[8px] text-[#00E5A0] bg-[#00E5A0]/10 rounded px-1 py-0.5 font-medium">AI Scout</span>
           </div>
-          <p className="text-[11px] text-[#94A3B8] leading-relaxed line-clamp-3">{teamB.perplexityContext}</p>
+          <div className="line-clamp-4">
+            <MarkdownContent content={teamB.perplexityContext} />
+          </div>
         </div>
       )}
 
@@ -551,7 +556,7 @@ function TeamPanel({ team }: { team: Team }) {
       {team.keyPlayers && (
         <div className="flex flex-col gap-1">
           <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">Key Players</div>
-          <p className="text-xs text-[#94A3B8] leading-relaxed">{team.keyPlayers}</p>
+          <MarkdownContent content={team.keyPlayers} />
         </div>
       )}
 
@@ -562,7 +567,7 @@ function TeamPanel({ team }: { team: Team }) {
             <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">🔍 AI Scouting Report</div>
             <span className="text-[9px] font-medium text-[#00E5A0] bg-[#00E5A0]/10 border border-[#00E5A0]/20 rounded px-1.5 py-0.5">Perplexity + Claude</span>
           </div>
-          <p className="text-xs text-[#94A3B8] leading-relaxed">{team.perplexityContext}</p>
+          <MarkdownContent content={team.perplexityContext} />
         </div>
       )}
     </div>

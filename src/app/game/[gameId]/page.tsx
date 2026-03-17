@@ -9,6 +9,7 @@ import type { Team, Game } from "../../../lib/types";
 import { getSeedColor, ROUND_LABELS } from "../../../lib/types";
 import { TeamLogo } from "../../../components/TeamLogo";
 import { AudioPlayer } from "../../../components/AudioPlayer";
+import { MarkdownContent } from "../../../components/MarkdownContent";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -469,7 +470,7 @@ function TeamProfileSection({ team }: { team: Team }) {
       {team.keyPlayers && (
         <div className="flex flex-col gap-1">
           <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#475569]">Key Players</div>
-          <p className="text-xs text-[#94A3B8] leading-relaxed">{team.keyPlayers}</p>
+          <MarkdownContent content={team.keyPlayers} />
         </div>
       )}
 
@@ -484,7 +485,7 @@ function TeamProfileSection({ team }: { team: Team }) {
               Perplexity + Claude
             </span>
           </div>
-          <p className="text-xs text-[#94A3B8] leading-relaxed">{team.perplexityContext}</p>
+          <MarkdownContent content={team.perplexityContext} />
         </div>
       )}
     </div>

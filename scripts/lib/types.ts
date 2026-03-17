@@ -41,6 +41,10 @@ export interface BracketTeam extends RawTeam {
   depthScore: number; // 1-10
   perplexityContext: string;
   netRanking: number;
+  coach: string;
+  kenPomRank: number | null;
+  apRank: number | null;
+  compositeRank: number;
 }
 
 export type Round =

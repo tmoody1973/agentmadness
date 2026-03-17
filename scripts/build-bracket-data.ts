@@ -7,6 +7,8 @@ import { enrichWithPerplexity } from "./lib/enrich-perplexity";
 import { generateProfiles } from "./lib/generate-profiles";
 import { buildBracketWiring } from "./lib/build-bracket-wiring";
 import { MEN_SCHEDULE, WOMEN_SCHEDULE } from "./lib/schedule-data";
+import { parseRankings } from "./lib/parse-rankings";
+import { parseCoaches } from "./lib/parse-coaches";
 import type { BracketData, BracketTeam, Gender } from "./lib/types";
 
 const MEN_REGION_MAP: Record<string, string> = {
@@ -49,6 +51,16 @@ async function buildBracket(gender: Gender): Promise<BracketData> {
   const experience = computeTournamentExperience(gender);
   console.log(`   ${Object.keys(upsetRates).length} matchup types analyzed`);
 
+  // Step 3b: Rankings and coaches
+  const genderStr = gender === "M" ? "men" : "women";
+  console.log("3b. Parsing rankings (Massey Ordinals)...");
+  const rankingsMap = await parseRankings(genderStr);
+  console.log(`   Rankings loaded for ${rankingsMap.size} teams`);
+
+  console.log("3c. Parsing coach data...");
+  const coachesMap = parseCoaches(genderStr);
+  console.log(`   Coaches loaded for ${coachesMap.size} teams`);
+
   // Step 4: Perplexity enrichment (optional)
   console.log("4. Enriching with Perplexity (if API key set)...");
   const perplexityContexts = await enrichWithPerplexity(rawTeams);
@@ -69,6 +81,8 @@ async function buildBracket(gender: Gender): Promise<BracketData> {
     const profile = profilesMap.get(rawTeam.teamId);
     const expCount = experience[rawTeam.teamId] ?? 0;
     const context = perplexityContexts.get(rawTeam.teamId) ?? "";
+    const rankings = rankingsMap.get(rawTeam.teamId);
+    const coachInfo = coachesMap.get(rawTeam.teamId);
 
     return {
       ...rawTeam,
@@ -79,7 +93,11 @@ async function buildBracket(gender: Gender): Promise<BracketData> {
       clutchRating: profile?.clutchRating ?? 5,
       depthScore: profile?.depthScore ?? 5,
       perplexityContext: context,
-      netRanking: 0, // placeholder — could be populated from NET rankings data
+      netRanking: rankings?.compositeRank ?? 0,
+      coach: coachInfo?.coachName ?? "Unknown",
+      kenPomRank: rankings?.kenPomRank ?? null,
+      apRank: rankings?.apRank ?? null,
+      compositeRank: rankings?.compositeRank ?? 999,
     };
   });
 

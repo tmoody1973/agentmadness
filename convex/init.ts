@@ -43,6 +43,10 @@ async function seedBracket(
       keyPlayers: team.keyPlayers.join(", "),
       styleTraits: team.styleTraits,
       perplexityContext: team.perplexityContext || undefined,
+      coach: team.coach || undefined,
+      kenPomRank: team.kenPomRank ?? undefined,
+      apRank: team.apRank ?? undefined,
+      compositeRank: team.compositeRank !== 999 ? team.compositeRank : undefined,
       eliminated: false,
     });
     seedCodeToDbId.set(team.seedCode, dbId);
