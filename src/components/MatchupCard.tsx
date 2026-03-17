@@ -12,8 +12,8 @@ interface MatchupCardProps {
   game: Game;
   teams: Team[];
   onSelect?: (gameId: string) => void;
+  onTeamClick?: (team: Team) => void;
   isSelected?: boolean;
-  compact?: boolean;
 }
 
 const variants = {
@@ -39,7 +39,7 @@ const variants = {
   },
 };
 
-export function MatchupCard({ game, teams, onSelect, isSelected }: MatchupCardProps) {
+export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: MatchupCardProps) {
   const teamA = getTeamById(teams, game.teamAId);
   const teamB = getTeamById(teams, game.teamBId);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -99,7 +99,7 @@ export function MatchupCard({ game, teams, onSelect, isSelected }: MatchupCardPr
         game.status === "completed" && game.winnerId === game.teamAId && "bg-green-500/10",
         game.status === "completed" && game.winnerId !== game.teamAId && "opacity-40",
       )}>
-        <TeamPill team={teamA} isWinner={game.winnerId === game.teamAId} />
+        <TeamPill team={teamA} isWinner={game.winnerId === game.teamAId} onTeamClick={onTeamClick} />
         {scoreA !== undefined && (
           <span className={cn(
             "text-xs font-mono font-bold tabular-nums",
@@ -116,7 +116,7 @@ export function MatchupCard({ game, teams, onSelect, isSelected }: MatchupCardPr
         game.status === "completed" && game.winnerId === game.teamBId && "bg-green-500/10",
         game.status === "completed" && game.winnerId !== game.teamBId && "opacity-40",
       )}>
-        <TeamPill team={teamB} isWinner={game.winnerId === game.teamBId} />
+        <TeamPill team={teamB} isWinner={game.winnerId === game.teamBId} onTeamClick={onTeamClick} />
         {scoreB !== undefined && (
           <span className={cn(
             "text-xs font-mono font-bold tabular-nums",

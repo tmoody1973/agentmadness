@@ -2,6 +2,7 @@
 
 import type { Game, Team } from "../lib/types";
 import { MatchupCard } from "./MatchupCard";
+import { ConnectorLines } from "./ConnectorLines";
 import { cn } from "../lib/utils";
 
 interface RegionBracketProps {
@@ -10,12 +11,11 @@ interface RegionBracketProps {
   regionName: string;
   direction: "ltr" | "rtl";
   onSelectGame: (gameId: string) => void;
+  onTeamClick?: (team: Team) => void;
   selectedGameId?: string;
 }
 
-const REGION_ROUNDS = ["R64", "R32", "S16", "E8"] as const;
-
-const REGION_COLORS: Record<string, string> = {
+export const REGION_COLORS: Record<string, string> = {
   East: "#3b82f6",
   South: "#22c55e",
   West: "#f97316",
@@ -26,6 +26,11 @@ const REGION_COLORS: Record<string, string> = {
   "Sacramento 2": "#a855f7",
 };
 
+// Layout constants
+const ROW_HEIGHT = 56; // px per R64 game row
+const CARD_WIDTH = 160; // px for each matchup card
+const CONNECTOR_WIDTH = 28; // px for connector SVG columns
+
 function getRegionGamesByRound(games: Game[], region: string, round: string): Game[] {
   return games
     .filter((g) => g.region === region && g.round === round)
@@ -33,84 +38,53 @@ function getRegionGamesByRound(games: Game[], region: string, round: string): Ga
 }
 
 /**
- * Renders a single round column with bracket connector lines.
- * Each game is vertically centered between its two feeder games from the previous round.
+ * Renders a column of matchup cards for a given round.
+ * Cards are vertically positioned using CSS Grid row spans so each card
+ * is naturally centered between its two feeder games.
+ *
+ * The grid has 8 rows (one per R64 slot).
+ * R64: 1 row each (8 cards)
+ * R32: 2 rows each (4 cards)
+ * S16: 4 rows each (2 cards)
+ * E8:  8 rows (1 card)
  */
-function RoundColumn({
+function RoundCards({
   roundGames,
   teams,
-  roundIndex,
+  rowSpan,
   onSelectGame,
+  onTeamClick,
   selectedGameId,
-  direction,
 }: {
   roundGames: Game[];
   teams: Team[];
-  roundIndex: number;
+  rowSpan: number;
   onSelectGame: (gameId: string) => void;
+  onTeamClick?: (team: Team) => void;
   selectedGameId?: string;
-  direction: "ltr" | "rtl";
 }) {
-  // Card height + spacing grows with rounds to center between feeders
-  // R64: 8 games tight, R32: 4 games, S16: 2 games, E8: 1 game
-  const cardHeight = 60; // approx px per matchup card
-  const gap = cardHeight * Math.pow(2, roundIndex) - cardHeight;
-
   return (
-    <div
-      className="flex flex-col justify-around relative"
-      style={{
-        gap: `${gap}px`,
-        paddingTop: `${gap / 2}px`,
-      }}
-    >
+    <>
       {roundGames.map((game, idx) => (
-        <div key={game._id} className="relative flex items-center">
-          {/* Connector line going OUT to next round */}
-          {roundIndex < 3 && (
-            <div
-              className={cn(
-                "absolute top-1/2 w-4 border-t border-white/20",
-                direction === "ltr" ? "right-0 translate-x-full" : "left-0 -translate-x-full"
-              )}
-            />
-          )}
-
-          {/* Connector line coming IN from previous round */}
-          {roundIndex > 0 && (
-            <div
-              className={cn(
-                "absolute top-1/2 w-4 border-t border-white/20",
-                direction === "ltr" ? "left-0 -translate-x-full" : "right-0 translate-x-full"
-              )}
-            />
-          )}
-
-          {/* Vertical bracket merge lines (connects two feeders to one game) */}
-          {roundIndex > 0 && (
-            <div
-              className={cn(
-                "absolute border-white/20",
-                direction === "ltr" ? "left-0 -translate-x-4" : "right-0 translate-x-4"
-              )}
-              style={{
-                top: `calc(50% - ${gap / 2 + cardHeight / 2}px)`,
-                height: `${gap + cardHeight}px`,
-                borderLeftWidth: direction === "ltr" ? 1 : 0,
-                borderRightWidth: direction === "rtl" ? 1 : 0,
-              }}
-            />
-          )}
-
+        <div
+          key={game._id}
+          className="flex items-center justify-center"
+          style={{
+            gridRow: `${idx * rowSpan + 1} / span ${rowSpan}`,
+            gridColumn: 1,
+            height: rowSpan * ROW_HEIGHT,
+          }}
+        >
           <MatchupCard
             game={game}
             teams={teams}
             onSelect={onSelectGame}
+            onTeamClick={onTeamClick}
             isSelected={selectedGameId === game._id}
           />
         </div>
       ))}
-    </div>
+    </>
   );
 }
 
@@ -120,17 +94,222 @@ export function RegionBracket({
   regionName,
   direction,
   onSelectGame,
+  onTeamClick,
   selectedGameId,
 }: RegionBracketProps) {
   const accentColor = REGION_COLORS[regionName] ?? "#6b7280";
 
-  const rounds = REGION_ROUNDS.map((round) =>
-    getRegionGamesByRound(games, regionName, round)
+  const r64 = getRegionGamesByRound(games, regionName, "R64");
+  const r32 = getRegionGamesByRound(games, regionName, "R32");
+  const s16 = getRegionGamesByRound(games, regionName, "S16");
+  const e8 = getRegionGamesByRound(games, regionName, "E8");
+
+  const totalRows = 8;
+  const totalHeight = totalRows * ROW_HEIGHT;
+
+  // Build column order: for LTR = [R64, conn, R32/S16, conn, E8]
+  // For RTL we reverse: [E8, conn, S16/R32, conn, R64]
+  const ltrColumns = (
+    <>
+      {/* R64 column */}
+      <div
+        className="relative"
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={r64}
+          teams={teams}
+          rowSpan={1}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* Connector R64→R32 */}
+      <ConnectorLines
+        feederCount={8}
+        rowHeightPx={ROW_HEIGHT}
+        width={CONNECTOR_WIDTH}
+        direction="ltr"
+      />
+
+      {/* R32 + S16 stacked column */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={r32}
+          teams={teams}
+          rowSpan={2}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* Connector R32→S16 */}
+      <ConnectorLines
+        feederCount={4}
+        rowHeightPx={ROW_HEIGHT * 2}
+        width={CONNECTOR_WIDTH}
+        direction="ltr"
+      />
+
+      {/* S16 column */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={s16}
+          teams={teams}
+          rowSpan={4}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* Connector S16→E8 */}
+      <ConnectorLines
+        feederCount={2}
+        rowHeightPx={ROW_HEIGHT * 4}
+        width={CONNECTOR_WIDTH}
+        direction="ltr"
+      />
+
+      {/* E8 column */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={e8}
+          teams={teams}
+          rowSpan={8}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+    </>
   );
 
-  // For RTL, reverse the visual order of columns
-  const displayRounds = direction === "rtl" ? [...rounds].reverse() : rounds;
-  const displayIndices = direction === "rtl" ? [3, 2, 1, 0] : [0, 1, 2, 3];
+  const rtlColumns = (
+    <>
+      {/* E8 column (leftmost in RTL) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={e8}
+          teams={teams}
+          rowSpan={8}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* Connector E8←S16 */}
+      <ConnectorLines
+        feederCount={2}
+        rowHeightPx={ROW_HEIGHT * 4}
+        width={CONNECTOR_WIDTH}
+        direction="rtl"
+      />
+
+      {/* S16 column */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={s16}
+          teams={teams}
+          rowSpan={4}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* Connector S16←R32 */}
+      <ConnectorLines
+        feederCount={4}
+        rowHeightPx={ROW_HEIGHT * 2}
+        width={CONNECTOR_WIDTH}
+        direction="rtl"
+      />
+
+      {/* R32 column */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={r32}
+          teams={teams}
+          rowSpan={2}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* Connector R32←R64 */}
+      <ConnectorLines
+        feederCount={8}
+        rowHeightPx={ROW_HEIGHT}
+        width={CONNECTOR_WIDTH}
+        direction="rtl"
+      />
+
+      {/* R64 column (rightmost in RTL) */}
+      <div
+        className="relative"
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${totalRows}, ${ROW_HEIGHT}px)`,
+          width: CARD_WIDTH,
+        }}
+      >
+        <RoundCards
+          roundGames={r64}
+          teams={teams}
+          rowSpan={1}
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+    </>
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -142,36 +321,23 @@ export function RegionBracket({
         )}
       >
         <div
-          className="h-3 w-3 rounded-full"
+          className="h-2.5 w-2.5 rounded-full shrink-0"
           style={{ backgroundColor: accentColor }}
         />
         <span
-          className="text-xs font-semibold uppercase tracking-widest"
+          className="text-[11px] font-bold uppercase tracking-widest"
           style={{ color: accentColor }}
         >
           {regionName}
         </span>
       </div>
 
-      {/* Bracket tree */}
+      {/* Bracket columns */}
       <div
-        className={cn(
-          "flex items-start",
-          direction === "rtl" && "flex-row-reverse"
-        )}
-        style={{ gap: "16px" }}
+        className="flex items-start"
+        style={{ height: totalHeight }}
       >
-        {displayRounds.map((roundGames, displayIdx) => (
-          <RoundColumn
-            key={displayIdx}
-            roundGames={roundGames}
-            teams={teams}
-            roundIndex={displayIndices[displayIdx]}
-            onSelectGame={onSelectGame}
-            selectedGameId={selectedGameId}
-            direction={direction}
-          />
-        ))}
+        {direction === "ltr" ? ltrColumns : rtlColumns}
       </div>
     </div>
   );

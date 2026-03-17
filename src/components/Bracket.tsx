@@ -12,17 +12,22 @@ interface BracketProps {
   teams: Team[];
   games: Game[];
   onSelectGame: (gameId: string) => void;
+  onTeamClick?: (team: Team) => void;
   selectedGameId?: string;
 }
 
 const MEN_REGIONS = {
-  left: ["East", "South"],
-  right: ["West", "Midwest"],
+  topLeft: "East",
+  topRight: "West",
+  bottomLeft: "South",
+  bottomRight: "Midwest",
 };
 
 const WOMEN_REGIONS = {
-  left: ["Fort Worth 1", "Fort Worth 3"],
-  right: ["Sacramento 4", "Sacramento 2"],
+  topLeft: "Fort Worth 1",
+  topRight: "Sacramento 4",
+  bottomLeft: "Fort Worth 3",
+  bottomRight: "Sacramento 2",
 };
 
 export function Bracket({
@@ -30,6 +35,7 @@ export function Bracket({
   teams,
   games,
   onSelectGame,
+  onTeamClick,
   selectedGameId,
 }: BracketProps) {
   const [firstFourOpen, setFirstFourOpen] = useState(false);
@@ -40,8 +46,73 @@ export function Bracket({
   const firstFourGames = getGamesByRound(games, "FIRST_FOUR") as Game[];
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* First Four collapsible section */}
+    <div className="flex flex-col gap-6 px-4 py-4 min-w-[1300px]">
+      {/* ── Top region pair: topLeft (LTR) + topRight (RTL) ── */}
+      <div className="flex items-start gap-4 justify-center">
+        <RegionBracket
+          games={games}
+          teams={teams}
+          regionName={regionConfig.topLeft}
+          direction="ltr"
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+
+        {/* Spacer to push FinalFour into the center on the row below */}
+        <div className="flex-1 shrink-0" />
+
+        <RegionBracket
+          games={games}
+          teams={teams}
+          regionName={regionConfig.topRight}
+          direction="rtl"
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* ── Final Four + Championship (centered) ── */}
+      <div className="flex justify-center">
+        <div className="rounded-xl border border-yellow-400/15 bg-yellow-900/5 px-4 py-4">
+          <FinalFour
+            games={games}
+            teams={teams}
+            onSelectGame={onSelectGame}
+            onTeamClick={onTeamClick}
+            selectedGameId={selectedGameId}
+            champion={tournament.champion}
+          />
+        </div>
+      </div>
+
+      {/* ── Bottom region pair: bottomLeft (LTR) + bottomRight (RTL) ── */}
+      <div className="flex items-start gap-4 justify-center">
+        <RegionBracket
+          games={games}
+          teams={teams}
+          regionName={regionConfig.bottomLeft}
+          direction="ltr"
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+
+        <div className="flex-1 shrink-0" />
+
+        <RegionBracket
+          games={games}
+          teams={teams}
+          regionName={regionConfig.bottomRight}
+          direction="rtl"
+          onSelectGame={onSelectGame}
+          onTeamClick={onTeamClick}
+          selectedGameId={selectedGameId}
+        />
+      </div>
+
+      {/* ── First Four collapsible ── */}
       {firstFourGames.length > 0 && (
         <div className="rounded-lg border border-white/10 bg-gray-900/50 px-4 py-3">
           <button
@@ -59,6 +130,7 @@ export function Bracket({
                   game={game}
                   teams={teams}
                   onSelect={onSelectGame}
+                  onTeamClick={onTeamClick}
                   isSelected={selectedGameId === game._id}
                 />
               ))}
@@ -66,52 +138,6 @@ export function Bracket({
           )}
         </div>
       )}
-
-      {/* Main bracket — horizontally scrollable */}
-      <div className="overflow-x-auto pb-4">
-        <div className="flex gap-4 items-start min-w-[1280px]">
-          {/* Left side: ltr regions */}
-          <div className="flex flex-col gap-8 flex-1">
-            {regionConfig.left.map((region) => (
-              <RegionBracket
-                key={region}
-                games={games}
-                teams={teams}
-                regionName={region}
-                direction="ltr"
-                onSelectGame={onSelectGame}
-                selectedGameId={selectedGameId}
-              />
-            ))}
-          </div>
-
-          {/* Center: Final Four */}
-          <div className="w-52 shrink-0">
-            <FinalFour
-              games={games}
-              teams={teams}
-              onSelectGame={onSelectGame}
-              selectedGameId={selectedGameId}
-              champion={tournament.champion}
-            />
-          </div>
-
-          {/* Right side: rtl regions */}
-          <div className="flex flex-col gap-8 flex-1">
-            {regionConfig.right.map((region) => (
-              <RegionBracket
-                key={region}
-                games={games}
-                teams={teams}
-                regionName={region}
-                direction="rtl"
-                onSelectGame={onSelectGame}
-                selectedGameId={selectedGameId}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

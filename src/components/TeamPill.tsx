@@ -7,9 +7,10 @@ import { cn } from "../lib/utils";
 interface TeamPillProps {
   team: Team | undefined;
   isWinner?: boolean;
+  onTeamClick?: (team: Team) => void;
 }
 
-export function TeamPill({ team, isWinner }: TeamPillProps) {
+export function TeamPill({ team, isWinner, onTeamClick }: TeamPillProps) {
   if (!team) {
     return (
       <div className="flex items-center gap-1.5">
@@ -34,8 +35,15 @@ export function TeamPill({ team, isWinner }: TeamPillProps) {
       <span
         className={cn(
           "truncate text-[11px] leading-tight",
-          isWinner ? "font-bold text-white" : "text-gray-300"
+          isWinner ? "font-bold text-white" : "text-gray-300",
+          onTeamClick && "hover:underline cursor-pointer"
         )}
+        onClick={(e) => {
+          if (onTeamClick) {
+            e.stopPropagation();
+            onTeamClick(team);
+          }
+        }}
       >
         {team.name}
       </span>
