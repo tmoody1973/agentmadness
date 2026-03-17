@@ -11,21 +11,23 @@ import {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const ENSEMBLE_WEIGHTS = [
-  { label: "KenPom Efficiency", weight: 55, color: "#00E5A0", desc: "Adjusted offensive + defensive efficiency margin" },
-  { label: "Bradley-Terry", weight: 30, color: "#4B8DF8", desc: "Iterative win-probability rating from all games" },
-  { label: "Seed-Based", weight: 10, color: "#FFB800", desc: "Historical seed win rates, logistic adjusted" },
-  { label: "Conf Tourney", weight: 5, color: "#F44771", desc: "Conference champion momentum signal" },
+  { label: "KenPom Efficiency", weight: 55, color: "#00E5A0", desc: "How many points a team scores vs allows per 100 possessions — the #1 predictor in college basketball", plain: "The Stats Nerd — looks at raw scoring efficiency" },
+  { label: "Bradley-Terry", weight: 30, color: "#4B8DF8", desc: "Strength ratings computed from who beat whom — beating a good team counts more than beating a bad one", plain: "The Scout — weighs quality of wins and losses" },
+  { label: "Seed-Based", weight: 10, color: "#FFB800", desc: "The committee's expert judgment turned into probabilities — a 1 seed beats a 16 seed 99% of the time", plain: "The Committee — uses the seed numbers" },
+  { label: "Conf Tourney", weight: 5, color: "#F44771", desc: "Teams that just won their conference tournament get a small confidence boost", plain: "The Momentum Tracker — hot teams get a bump" },
 ];
 
 const REGIONS = ["East", "South", "West", "Midwest"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function confidenceLabel(prob: number): { label: string; color: string } {
+function confidenceLabel(prob: number): { label: string; color: string; plain: string } {
   const conf = Math.max(prob, 1 - prob);
-  if (conf >= 0.80) return { label: "High Confidence", color: "#00E5A0" };
-  if (conf >= 0.60) return { label: "Favored", color: "#4B8DF8" };
-  return { label: "Toss-Up", color: "#FFB800" };
+  if (conf >= 0.90) return { label: "Lock", color: "#00E5A0", plain: "We're very confident in this one" };
+  if (conf >= 0.80) return { label: "Strong Pick", color: "#00E5A0", plain: "Solid favorite — but upsets happen" };
+  if (conf >= 0.65) return { label: "Favored", color: "#4B8DF8", plain: "Should win, but don't be shocked if they don't" };
+  if (conf >= 0.55) return { label: "Slight Edge", color: "#4B8DF8", plain: "Barely leaning one way — could go either way" };
+  return { label: "Coin Flip", color: "#FFB800", plain: "We genuinely don't know — this is pure March Madness" };
 }
 
 function isUpsetPick(m: PredictionMatchup): boolean {
@@ -41,19 +43,28 @@ function MatchupRow({ matchup }: { matchup: PredictionMatchup }) {
   const { probA } = matchup;
   const probB = 1 - probA;
   const upset = isUpsetPick(matchup);
-  const { label: confLabel, color: confColor } = confidenceLabel(probA);
+  const { label: confLabel, color: confColor, plain: confPlain } = confidenceLabel(probA);
 
   const favorA = probA >= 0.5;
+  const favName = favorA ? matchup.teamA.name : matchup.teamB.name;
+  const favPct = Math.round(Math.max(probA, probB) * 100);
 
   return (
     <div className={`rounded-xl border transition-all ${upset ? "border-[#F44771]/40 bg-[#F44771]/5" : "border-white/8 bg-[#1C2636]"} p-4 mb-2`}>
-      {upset && (
-        <div className="flex justify-end mb-2">
+      {/* Confidence badge + plain explanation */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border" style={{ color: confColor, borderColor: `${confColor}30`, background: `${confColor}10` }}>
+          {confLabel}
+        </span>
+        {upset && (
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#F44771] bg-[#F44771]/15 px-2 py-0.5 rounded-full border border-[#F44771]/30">
             Upset Pick
           </span>
-        </div>
-      )}
+        )}
+      </div>
+      <p className="text-[11px] text-white/35 mb-3 leading-relaxed italic">
+        {confPlain} — {favName} wins {favPct} out of 100 times in our model
+      </p>
 
       {/* Team A */}
       <div className="mb-1.5">
@@ -297,11 +308,25 @@ export default function PredictionsPage() {
               Our<br />
               <span className="text-[#00E5A0]">Predictions</span>
             </h1>
-            <p className="text-white/50 text-base md:text-lg max-w-2xl mb-8 leading-relaxed">
-              132,133 matchup probabilities. Every possible game in both tournaments.
-              Built with a 4-model ensemble — KenPom efficiency, Bradley-Terry ratings,
-              seed history, and conference tournament momentum.
+            <p className="text-white/50 text-base md:text-lg max-w-2xl mb-6 leading-relaxed">
+              We predicted the winner of every possible game in both the men&apos;s and women&apos;s
+              NCAA tournaments — 132,133 matchups total — and submitted them to a real
+              data science competition on Kaggle.
             </p>
+
+            {/* Plain English explainer */}
+            <div className="max-w-2xl rounded-xl bg-[#00E5A0]/5 border border-[#00E5A0]/20 p-5 mb-8">
+              <h3 className="text-[#00E5A0] text-xs font-bold uppercase tracking-wider mb-2">💡 What is this page?</h3>
+              <p className="text-white/60 text-sm leading-relaxed">
+                Imagine asking a computer: &quot;If Duke played every other team in the tournament,
+                how often would Duke win?&quot; We did that for <strong className="text-white">every single pair of teams</strong> —
+                not just the games that will actually happen, but every possible matchup.
+                Instead of guessing, our computer uses real stats from this season to calculate
+                a <strong className="text-white">win percentage</strong> for each game. A prediction of
+                <strong className="text-[#00E5A0]"> 75%</strong> means &quot;if these teams played 100 times,
+                we think Team A wins about 75 of them.&quot;
+              </p>
+            </div>
           </div>
         </section>
 
@@ -311,9 +336,21 @@ export default function PredictionsPage() {
             <p className="text-[#00E5A0] text-xs font-semibold uppercase tracking-[0.25em] mb-2">
               /Model Architecture
             </p>
-            <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white mb-8">
+            <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white mb-4">
               4-Model Ensemble
             </h2>
+
+            {/* Plain English explainer */}
+            <div className="rounded-xl bg-[#4B8DF8]/5 border border-[#4B8DF8]/20 p-5 mb-8">
+              <h3 className="text-[#4B8DF8] text-xs font-bold uppercase tracking-wider mb-2">💡 What&apos;s an ensemble?</h3>
+              <p className="text-white/60 text-sm leading-relaxed">
+                Instead of relying on one method, we asked <strong className="text-white">four different &quot;experts&quot;</strong> for
+                their prediction, then blended their answers. Think of it like asking a stats
+                nerd, a basketball scout, the selection committee, and a momentum tracker for
+                their picks — then averaging them based on how reliable each expert is.
+                The stats nerd (KenPom) gets the most weight because they&apos;re right most often.
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {ENSEMBLE_WEIGHTS.map((model) => (
@@ -337,7 +374,8 @@ export default function PredictionsPage() {
                       style={{ width: `${model.weight}%`, background: model.color }}
                     />
                   </div>
-                  <p className="text-white text-sm font-bold mb-1">{model.label}</p>
+                  <p className="text-white text-sm font-bold mb-0.5">{model.label}</p>
+                  <p className="text-[#FFB800] text-[10px] font-medium mb-1.5">{model.plain}</p>
                   <p className="text-white/40 text-xs leading-relaxed">{model.desc}</p>
                 </div>
               ))}
@@ -400,9 +438,10 @@ export default function PredictionsPage() {
                 <p className="text-[#00E5A0] text-xs font-semibold uppercase tracking-[0.25em] mb-2">
                   /Round of 64
                 </p>
-                <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white">
+                <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white mb-2">
                   First Round Predictions
                 </h2>
+                <p className="text-white/40 text-sm">These are the actual games happening in the tournament. The longer the bar, the more confident we are.</p>
               </div>
 
               {/* Gender toggle */}
@@ -456,10 +495,15 @@ export default function PredictionsPage() {
               <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white mb-2">
                 Upset Picks
               </h2>
-              <p className="text-white/40 text-sm mb-8 max-w-xl">
-                Matchups where our ensemble model favors the higher-seeded (underdog) team.
-                The efficiency gap is smaller than seed suggests.
-              </p>
+              <div className="rounded-xl bg-[#F44771]/5 border border-[#F44771]/20 p-5 mb-8 max-w-xl">
+                <h3 className="text-[#F44771] text-xs font-bold uppercase tracking-wider mb-2">💡 What&apos;s an upset pick?</h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  In March Madness, the higher seed (like a #1) is <em>supposed</em> to beat the lower seed (like a #16).
+                  But our computer found some matchups where the <strong className="text-white">&quot;underdog&quot; is actually the better team statistically</strong>.
+                  The selection committee may have under-seeded them — our model disagrees with the committee&apos;s ranking.
+                  These are the games where we&apos;re predicting an upset.
+                </p>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredUpsets.map((m, i) => (
@@ -480,10 +524,14 @@ export default function PredictionsPage() {
               <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white mb-2">
                 1-Seed vs 1-Seed
               </h2>
-              <p className="text-white/40 text-sm mb-8 max-w-xl">
-                Championship-caliber clashes. Every possible matchup between the four #1 seeds —
-                the teams our model rates as the tournament favorites.
-              </p>
+              <div className="rounded-xl bg-[#4B8DF8]/5 border border-[#4B8DF8]/20 p-5 mb-8 max-w-xl">
+                <h3 className="text-[#4B8DF8] text-xs font-bold uppercase tracking-wider mb-2">💡 Why show these?</h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  The four #1 seeds are supposed to be the best teams in the country. But even among the elite,
+                  our model has clear favorites. If <strong className="text-white">Duke played Arizona</strong>, who wins?
+                  These predictions show which #1 seed our model thinks is <em>actually</em> the strongest — and by how much.
+                </p>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredChamp.map((m, i) => (
@@ -588,19 +636,24 @@ export default function PredictionsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
-                  title: "Win Probability",
+                  title: "The Percentages",
                   color: "#00E5A0",
-                  body: "A prediction of 0.75 means our model thinks Team A wins 75 out of 100 times that matchup is played. It's not a guarantee — it's a distribution.",
+                  body: "When we say 75%, imagine the two teams playing 100 games. We think Team A wins about 75 of them. The higher the number, the more confident we are. Even a 90% pick loses 1 out of 10 times — that's why March Madness is so exciting.",
+                },
+                {
+                  title: "The Bar Charts",
+                  color: "#4B8DF8",
+                  body: "The colored bars show how confident we are visually. A long teal bar = strong favorite. Two equal-length bars = coin flip. A pink bar on the underdog = we're predicting an upset. The longer the bar, the more confident the pick.",
                 },
                 {
                   title: "Upset Picks",
                   color: "#F44771",
-                  body: "An upset pick means our ensemble favors the worse-seeded team. This happens when the efficiency gap is smaller than seed suggests — the selection committee sometimes under-seeds a strong team.",
+                  body: "These are games where our computer disagrees with the \"experts\" (the selection committee). The committee ranked Team A higher, but our stats say Team B is actually better. This is where the fun is — will our data beat the experts?",
                 },
                 {
-                  title: "Toss-Ups",
+                  title: "How We Get Scored",
                   color: "#FFB800",
-                  body: "Predictions near 50% mean our model has high uncertainty. In these games, anything can happen — and that's where March Madness lives.",
+                  body: "Kaggle scores us based on how calibrated our predictions are. If we say 70%, roughly 70% of those games should actually go our way. Being confidently wrong gets punished hard — being cautious is safer but won't win the competition.",
                 },
               ].map((item) => (
                 <div
