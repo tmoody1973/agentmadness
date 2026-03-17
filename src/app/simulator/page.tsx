@@ -335,7 +335,7 @@ export default function Home() {
       <OnboardingModal />
 
       {/* ── Main area ── */}
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 lg:overflow-hidden">
         {/* Header */}
         <header className="shrink-0 z-30 border-b border-white/5 bg-[#0A0E17]/90 backdrop-blur-sm">
           {/* Top row: logo + sign in */}
