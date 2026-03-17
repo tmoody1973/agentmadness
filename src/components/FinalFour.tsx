@@ -154,8 +154,8 @@ export function FinalFour({
 
 function EmptySlot({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-center rounded border border-white/5 bg-[#1E2A3A] text-xs text-[#475569] italic"
-      style={{ width: 200, height: 58 }}>
+    <div className="flex items-center justify-center rounded-lg border border-white/10 bg-[#1C2636] text-sm text-white/25 font-medium shadow-md"
+      style={{ width: 210, height: 64 }}>
       {label}
     </div>
   );

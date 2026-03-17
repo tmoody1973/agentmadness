@@ -13,11 +13,11 @@ interface TeamPillProps {
 export function TeamPill({ team, isWinner, onTeamClick }: TeamPillProps) {
   if (!team) {
     return (
-      <div className="flex items-center gap-1.5">
-        <span className="flex h-5 w-6 items-center justify-center rounded text-[11px] font-bold bg-[#1A2235] text-[#475569]">
+      <div className="flex items-center gap-2">
+        <span className="flex h-6 w-7 items-center justify-center rounded bg-white/10 text-xs font-bold text-white/30">
           ?
         </span>
-        <span className="text-[13px] text-[#475569] italic">TBD</span>
+        <span className="text-sm text-white/30 font-medium">TBD</span>
       </div>
     );
   }
@@ -25,18 +25,18 @@ export function TeamPill({ team, isWinner, onTeamClick }: TeamPillProps) {
   const seedColor = getSeedColor(team.seed);
 
   return (
-    <div className="flex items-center gap-1.5 min-w-0">
+    <div className="flex items-center gap-2 min-w-0">
       <span
-        className="flex h-5 w-6 shrink-0 items-center justify-center rounded text-[11px] font-bold text-white"
+        className="flex h-6 w-7 shrink-0 items-center justify-center rounded text-xs font-extrabold text-white"
         style={{ backgroundColor: seedColor }}
       >
         {team.seed}
       </span>
       <span
         className={cn(
-          "truncate text-[13px] leading-tight",
-          isWinner ? "font-bold text-white" : "text-[#94A3B8]",
-          onTeamClick && "hover:underline cursor-pointer"
+          "truncate text-sm leading-tight font-semibold",
+          isWinner ? "text-white font-bold" : "text-gray-200",
+          onTeamClick && "hover:underline cursor-pointer hover:text-white"
         )}
         onClick={(e) => {
           if (onTeamClick) {

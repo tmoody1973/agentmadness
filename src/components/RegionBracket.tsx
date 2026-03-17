@@ -27,9 +27,9 @@ export const REGION_COLORS: Record<string, string> = {
 };
 
 // Layout constants
-const ROW_HEIGHT = 64; // px per R64 game row
-const CARD_WIDTH = 200; // px for each matchup card
-const CONNECTOR_WIDTH = 32; // px for connector SVG columns
+const ROW_HEIGHT = 68; // px per R64 game row
+const CARD_WIDTH = 210; // px for each matchup card
+const CONNECTOR_WIDTH = 28; // px for connector SVG columns
 
 function getRegionGamesByRound(games: Game[], region: string, round: string): Game[] {
   return games

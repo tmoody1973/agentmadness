@@ -71,13 +71,13 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
   return (
     <motion.div
       className={cn(
-        "relative cursor-pointer rounded border bg-[#1E2A3A] select-none overflow-visible shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]",
-        isSelected && "ring-2 ring-[#4B8DF8]/60"
+        "relative cursor-pointer rounded-lg border border-white/10 bg-[#1C2636] select-none overflow-visible shadow-md",
+        isSelected && "ring-2 ring-[#4B8DF8]/70"
       )}
       animate={animateValues}
       transition={isUpset ? { x: { duration: 0.4 } } : { duration: 0.3 }}
       onClick={() => onSelect?.(game._id)}
-      style={{ borderWidth: 1, width: 200 }}
+      style={{ borderWidth: 1, width: 210 }}
     >
       {showConfetti && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
@@ -95,7 +95,7 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
 
       {/* Team A */}
       <div className={cn(
-        "flex items-center justify-between px-2 py-1",
+        "flex items-center justify-between px-2.5 py-1.5",
         game.status === "completed" && game.winnerId === game.teamAId && "bg-[#00E5A0]/08",
         game.status === "completed" && game.winnerId !== game.teamAId && "opacity-40",
       )}>
@@ -112,7 +112,7 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
 
       {/* Team B */}
       <div className={cn(
-        "flex items-center justify-between px-2 py-1",
+        "flex items-center justify-between px-2.5 py-1.5",
         game.status === "completed" && game.winnerId === game.teamBId && "bg-[#00E5A0]/08",
         game.status === "completed" && game.winnerId !== game.teamBId && "opacity-40",
       )}>
