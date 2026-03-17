@@ -23,12 +23,26 @@ export function AudioPlayer({ storageId, autoPlay }: AudioPlayerProps) {
 
   // Load audio src whenever URL is available
   useEffect(() => {
-    if (url && audioRef.current) {
-      audioRef.current.src = url;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Stop any currently playing audio first
+    audio.pause();
+    audio.currentTime = 0;
+    setIsPlaying(false);
+
+    if (url) {
+      audio.src = url;
       if (autoPlay) {
-        audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+        audio.play().then(() => setIsPlaying(true)).catch(() => {});
       }
     }
+
+    // Cleanup: stop audio when component unmounts or URL changes
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
   }, [url, autoPlay]);
 
   const togglePlay = () => {

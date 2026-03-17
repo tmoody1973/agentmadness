@@ -351,9 +351,13 @@ export default function Home() {
             <div className="hidden md:flex items-center gap-4">
               {tournaments && tournaments.length > 1 && (
                 <TournamentToggle
-                  tournaments={tournaments}
-                  activeTournamentId={effectiveTournamentId ?? ""}
-                  onSelect={setActiveTournamentId}
+                  activeGender={activeGender}
+                  onSelectGender={(g) => {
+                    setActiveGender(g);
+                    setActiveTournamentId(null);
+                    setSelectedGameId(null);
+                    setSelectedTeam(null);
+                  }}
                 />
               )}
               <a href="/news" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
@@ -391,9 +395,13 @@ export default function Home() {
           {tournaments && tournaments.length > 1 && (
             <div className="flex md:hidden items-center justify-between px-3 pb-2 gap-2">
               <TournamentToggle
-                tournaments={tournaments}
-                activeTournamentId={effectiveTournamentId ?? ""}
-                onSelect={setActiveTournamentId}
+                activeGender={activeGender}
+                onSelectGender={(g) => {
+                  setActiveGender(g);
+                  setActiveTournamentId(null);
+                  setSelectedGameId(null);
+                  setSelectedTeam(null);
+                }}
               />
               <a href="/news" className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] shrink-0">
                 News
