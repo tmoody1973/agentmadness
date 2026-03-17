@@ -15,6 +15,7 @@ import type * as prompts from "../prompts.js";
 import type * as seedHelpers from "../seedHelpers.js";
 import type * as simulate from "../simulate.js";
 import type * as tts from "../tts.js";
+import type * as userTournament from "../userTournament.js";
 import type * as users from "../users.js";
 
 import type {
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   seedHelpers: typeof seedHelpers;
   simulate: typeof simulate;
   tts: typeof tts;
+  userTournament: typeof userTournament;
   users: typeof users;
 }>;
 

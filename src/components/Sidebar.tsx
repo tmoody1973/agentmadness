@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { TypeAnimation } from "react-type-animation";
@@ -606,6 +607,7 @@ interface SidebarProps {
   teams: Team[];
   onClose: () => void;
   announcerEnabled: boolean;
+  extraContent?: React.ReactNode;
 }
 
 export function Sidebar({
@@ -614,6 +616,7 @@ export function Sidebar({
   teams,
   onClose,
   announcerEnabled,
+  extraContent,
 }: SidebarProps) {
   const mode =
     selectedTeam ? "team" : selectedGame ? "game" : "empty";
@@ -663,12 +666,17 @@ export function Sidebar({
         {mode === "empty" && (
           <motion.div
             key="empty"
-            className="flex flex-col h-full"
+            className="flex flex-col h-full overflow-y-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
+            {extraContent && (
+              <div className="px-4 pt-4">
+                {extraContent}
+              </div>
+            )}
             <EmptyState />
           </motion.div>
         )}

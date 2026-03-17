@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -17,6 +17,152 @@ const ZOOM_MAX = 1.5;
 const ZOOM_DEFAULT = 0.75;
 const ZOOM_STEP = 0.1;
 
+// ─── SimSettings ──────────────────────────────────────────────────────────────
+
+function SliderRow({
+  label,
+  description,
+  value,
+  onChange,
+  lowLabel,
+  highLabel,
+}: {
+  label: string;
+  description: string;
+  value: number;
+  onChange: (v: number) => void;
+  lowLabel: string;
+  highLabel: string;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-semibold text-white">{label}</span>
+        <span className="text-xs font-mono text-[#00E5A0] tabular-nums">{value}</span>
+      </div>
+      <p className="text-[10px] text-white/40 mb-2">{description}</p>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="w-full accent-[#00E5A0] h-1.5"
+      />
+      <div className="flex justify-between text-[9px] text-white/30 mt-0.5">
+        <span>{lowLabel}</span>
+        <span>{highLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function SimSettings({ tournamentId }: { tournamentId: string }) {
+  const updateParams = useMutation(api.userTournament.updateSimParams);
+  const [chaos, setChaos] = useState(50);
+  const [seedBias, setSeedBias] = useState(50);
+  const [recency, setRecency] = useState(50);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    await updateParams({
+      tournamentId: tournamentId as Id<"tournaments">,
+      simParams: { chaosLevel: chaos, homeCourtBoost: seedBias, recencyWeight: recency },
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#1C2636] p-4 mb-4">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-[#00E5A0] mb-4">
+        Simulation Settings
+      </h3>
+
+      <div className="flex flex-col gap-4">
+        <SliderRow
+          label="Chaos Level"
+          description="Higher = more upsets and wild outcomes"
+          value={chaos}
+          onChange={setChaos}
+          lowLabel="Chalk"
+          highLabel="Madness"
+        />
+        <SliderRow
+          label="Seed Advantage"
+          description="Higher = higher seeds win more often"
+          value={seedBias}
+          onChange={setSeedBias}
+          lowLabel="Anyone's game"
+          highLabel="Chalk city"
+        />
+        <SliderRow
+          label="Recency Weight"
+          description="Higher = late-season performance matters more"
+          value={recency}
+          onChange={setRecency}
+          lowLabel="Full season"
+          highLabel="Hot streaks"
+        />
+      </div>
+
+      <button
+        onClick={handleSave}
+        className="mt-4 w-full rounded-lg bg-white/5 border border-white/10 py-2 text-xs font-semibold uppercase tracking-wider text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+      >
+        {saved ? "Saved!" : "Save Settings"}
+      </button>
+    </div>
+  );
+}
+
+// ─── CreateBracketCTA ─────────────────────────────────────────────────────────
+
+function CreateBracketCTA({
+  gender,
+  onCreated,
+}: {
+  gender: "men" | "women";
+  onCreated: () => void;
+}) {
+  const createMyTournament = useMutation(api.userTournament.createMyTournament);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleCreate = async () => {
+    setCreating(true);
+    setError(null);
+    try {
+      await createMyTournament({ gender });
+      onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create bracket");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-[#00E5A0]/30 bg-[#00E5A0]/5 p-4 mb-4 text-center">
+      <p className="text-xs text-white/60 mb-3">
+        You&apos;re viewing the shared template bracket. Create your own copy to simulate independently.
+      </p>
+      {error && (
+        <p className="text-xs text-red-400 mb-2">{error}</p>
+      )}
+      <button
+        onClick={handleCreate}
+        disabled={creating}
+        className="rounded-lg bg-[#00E5A0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0A0E17] hover:bg-[#00C890] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {creating ? "Creating…" : "Create My Bracket"}
+      </button>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function Home() {
   const { isSignedIn } = useAuth();
   const [activeTournamentId, setActiveTournamentId] = useState<string | null>(null);
@@ -24,13 +170,39 @@ export default function Home() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [announcerEnabled, setAnnouncerEnabled] = useState(false);
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
+  const [activeGender, setActiveGender] = useState<"men" | "women">("men");
 
   const bracketScrollRef = useRef<HTMLDivElement>(null);
 
   const tournaments = useQuery(api.bracket.getTournaments, {});
 
-  const effectiveTournamentId =
-    activeTournamentId ?? tournaments?.[0]?._id ?? null;
+  // Per-user tournament queries (only run when signed in)
+  const myMenTournament = useQuery(
+    api.userTournament.getMyTournament,
+    isSignedIn ? { gender: "men" } : "skip"
+  );
+  const myWomenTournament = useQuery(
+    api.userTournament.getMyTournament,
+    isSignedIn ? { gender: "women" } : "skip"
+  );
+
+  // Determine the active user tournament for the current gender
+  const myTournament = activeGender === "men" ? myMenTournament : myWomenTournament;
+  const hasMyTournament = myTournament !== null && myTournament !== undefined;
+
+  // Template tournament for the current gender (fallback / preview)
+  const templateTournament = tournaments?.find(
+    (t) => t.gender === activeGender && !t.userId
+  );
+
+  // Resolve the effective tournament: prefer user's own, fall back to template
+  const resolvedTournamentId =
+    activeTournamentId ??
+    (isSignedIn && hasMyTournament ? myTournament?._id : templateTournament?._id) ??
+    tournaments?.[0]?._id ??
+    null;
+
+  const effectiveTournamentId = resolvedTournamentId;
 
   const bracketState = useQuery(
     api.bracket.getBracketState,
@@ -52,6 +224,22 @@ export default function Home() {
     selectedGameId && bracketState?.games
       ? (bracketState.games.find((g: Game) => g._id === selectedGameId) ?? null)
       : null;
+
+  // Whether the current bracket is the user's own (not read-only)
+  const isMyBracket =
+    isSignedIn && hasMyTournament && effectiveTournamentId === myTournament?._id;
+
+  // Whether to show the "Create My Bracket" CTA
+  const showCreateCTA = isSignedIn && !hasMyTournament;
+
+  // Sync activeGender when tournaments load by detecting which gender is active
+  useEffect(() => {
+    if (!tournaments || !effectiveTournamentId) return;
+    const activeTournament = tournaments.find((t) => t._id === effectiveTournamentId);
+    if (activeTournament) {
+      setActiveGender(activeTournament.gender as "men" | "women");
+    }
+  }, [effectiveTournamentId, tournaments]);
 
   // Zoom with Ctrl + mouse wheel
   useEffect(() => {
@@ -86,6 +274,11 @@ export default function Home() {
 
   const handleFitZoom = useCallback(() => {
     setZoom(ZOOM_DEFAULT);
+  }, []);
+
+  const handleTournamentCreated = useCallback(() => {
+    // After creating, clear any manually selected tournament so the new one is auto-selected
+    setActiveTournamentId(null);
   }, []);
 
   if (isLoading) {
@@ -171,7 +364,7 @@ export default function Home() {
 
         {/* Controls */}
         <div className="shrink-0 px-4 py-2 flex flex-col gap-2">
-          {tournament && effectiveTournamentId && (
+          {tournament && effectiveTournamentId && isMyBracket && (
             <SimControls
               tournament={tournament}
               tournamentId={effectiveTournamentId}
@@ -179,6 +372,15 @@ export default function Home() {
               onAnnouncerToggle={setAnnouncerEnabled}
               upsetCount={tournament.upsetCount}
             />
+          )}
+
+          {/* Read-only notice for unauthenticated users or when viewing template */}
+          {(!isSignedIn || (!isMyBracket && !showCreateCTA)) && tournament && (
+            <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-center text-xs text-white/50">
+              {!isSignedIn
+                ? "Sign in to simulate your own bracket"
+                : "Viewing shared template bracket — read only"}
+            </div>
           )}
 
           {tournament && teams && upsets !== undefined && (
@@ -200,8 +402,6 @@ export default function Home() {
               style={{
                 transform: `scale(${zoom})`,
                 transformOrigin: "top center",
-                // Ensure the transformed div takes up real space so scroll works
-                // by manually computing the scaled dimensions
                 width: `${100 / zoom}%`,
                 minHeight: `${100 / zoom}%`,
               }}
@@ -227,6 +427,21 @@ export default function Home() {
           teams={teams}
           onClose={handleSidebarClose}
           announcerEnabled={announcerEnabled}
+          extraContent={
+            <>
+              {/* Create My Bracket CTA */}
+              {showCreateCTA && (
+                <CreateBracketCTA
+                  gender={activeGender}
+                  onCreated={handleTournamentCreated}
+                />
+              )}
+              {/* Simulation settings panel for the user's own bracket */}
+              {isMyBracket && !selectedGame && !selectedTeam && (
+                <SimSettings tournamentId={effectiveTournamentId!} />
+              )}
+            </>
+          }
         />
       )}
 

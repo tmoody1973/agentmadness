@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { internalAction, action } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { buildRefereePrompt } from "./prompts";
+import { buildRefereePrompt, SimParams } from "./prompts";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -137,10 +137,11 @@ export const simulateGame = internalAction({
       throw new Error(`Game ${args.gameId} missing teams — cannot simulate`);
     }
 
-    // Fetch both teams
-    const [teamA, teamB] = await Promise.all([
+    // Fetch both teams and tournament (for simParams)
+    const [teamA, teamB, tournament] = await Promise.all([
       ctx.runQuery(internal.bracket.getTeam, { teamId: game.teamAId }),
       ctx.runQuery(internal.bracket.getTeam, { teamId: game.teamBId }),
+      ctx.runQuery(internal.bracket.getTournament, { tournamentId: game.tournamentId }),
     ]);
     if (!teamA || !teamB) {
       throw new Error(`Teams not found for game ${args.gameId}`);
@@ -152,8 +153,9 @@ export const simulateGame = internalAction({
       status: "simulating",
     });
 
-    // Build prompt and call Claude
-    const prompt = buildRefereePrompt(teamA, teamB);
+    // Build prompt and call Claude, passing simParams if present
+    const simParams = tournament?.simParams as SimParams | undefined;
+    const prompt = buildRefereePrompt(teamA, teamB, undefined, simParams);
 
     let result: GameResult;
 

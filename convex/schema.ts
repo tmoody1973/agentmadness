@@ -18,6 +18,12 @@ export default defineSchema({
     upsetCount: v.number(),
     biggestUpset: v.optional(v.string()),
     champion: v.optional(v.string()),
+    userId: v.optional(v.string()), // Clerk user ID — null for template tournaments
+    simParams: v.optional(v.object({
+      chaosLevel: v.number(),      // 0-100, default 50. Higher = more upsets
+      homeCourtBoost: v.number(),  // 0-100, default 50. Higher = favors higher seeds
+      recencyWeight: v.number(),   // 0-100, default 50. Higher = weights recent games more
+    })),
   }),
 
   teams: defineTable({

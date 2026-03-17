@@ -78,18 +78,35 @@ function computeUpsetProbability(
   return clamp(upsetProb, 0.02, 0.98);
 }
 
+// ─── SimParams type ───────────────────────────────────────────────────────────
+
+export interface SimParams {
+  chaosLevel: number;      // 0-100, default 50
+  homeCourtBoost: number;  // 0-100, default 50
+  recencyWeight: number;   // 0-100, default 50
+}
+
 // ─── Prompt Builder ───────────────────────────────────────────────────────────
 
 export function buildRefereePrompt(
   teamA: Team,
   teamB: Team,
-  upsetRates?: Record<string, number>
+  upsetRates?: Record<string, number>,
+  simParams?: SimParams
 ): string {
   // Determine favorite (lower seed number = better)
   const favorite = teamA.seed <= teamB.seed ? teamA : teamB;
   const underdog = teamA.seed <= teamB.seed ? teamB : teamA;
 
-  const upsetProb = computeUpsetProbability(favorite, underdog, upsetRates);
+  const baseUpsetProb = computeUpsetProbability(favorite, underdog, upsetRates);
+
+  // Apply chaos multiplier: chaosLevel 50 = no change, 0 = 50% reduction, 100 = 50% increase
+  let upsetProb = baseUpsetProb;
+  if (simParams) {
+    const chaosMultiplier = 1 + (simParams.chaosLevel - 50) / 100; // 0.5 to 1.5
+    upsetProb = clamp(baseUpsetProb * chaosMultiplier, 0.02, 0.98);
+  }
+
   const favoriteWinProb = clamp(1 - upsetProb, 0.02, 0.98);
 
   const formatTeam = (team: Team, label: string): string => {
