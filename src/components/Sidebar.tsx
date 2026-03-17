@@ -10,6 +10,7 @@ import { getSeedColor, ROUND_LABELS } from "../lib/types";
 import { AudioPlayer } from "./AudioPlayer";
 import { TeamLogo } from "./TeamLogo";
 import { MarkdownContent } from "./MarkdownContent";
+import { ScoutingReport } from "./ScoutingReport";
 
 // ---------------------------------------------------------------------------
 // Win probability helpers
@@ -563,14 +564,12 @@ function TeamPanel({ team }: { team: Team }) {
 
       {/* AI scouting report */}
       {team.perplexityContext && (
-        <div className="flex flex-col gap-1 rounded-lg bg-[#0A0E17] border border-white/5 p-3" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
+        <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1.5">
             <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">🔍 AI Scouting Report</div>
             <span className="text-[9px] font-medium text-[#00E5A0] bg-[#00E5A0]/10 border border-[#00E5A0]/20 rounded px-1.5 py-0.5">Perplexity + Claude</span>
           </div>
-          <div className="max-w-full overflow-hidden">
-            <MarkdownContent content={team.perplexityContext} />
-          </div>
+          <ScoutingReport content={team.perplexityContext} />
         </div>
       )}
 
