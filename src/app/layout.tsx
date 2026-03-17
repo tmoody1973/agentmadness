@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "March Madness Simulator",
-  description: "Real-time NCAA Tournament bracket simulator",
+  title: "AgentMadness — AI Tournament Simulator",
+  description: "AI-powered NCAA Tournament bracket simulator. 136 teams. 134 games. Every matchup simulated by Claude AI.",
 };
 
 export default function RootLayout({

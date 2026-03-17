@@ -122,17 +122,17 @@ export default function Home() {
         {/* Header */}
         <header className="shrink-0 z-30 border-b border-white/5 bg-[#0A0E17]/90 backdrop-blur-sm">
           <div className="flex items-center justify-between px-6 py-3">
-            <div className="flex items-center gap-3">
+            <a href="/" className="flex items-center gap-3">
               <span className="text-2xl">🏀</span>
               <div>
                 <h1 className="text-xl font-extrabold uppercase tracking-tight text-white leading-none">
-                  March Madness
+                  Agent<span className="text-[#00E5A0]">Madness</span>
                 </h1>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#00E5A0]">
-                  Agent Simulator
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+                  AI Tournament Simulator
                 </p>
               </div>
-            </div>
+            </a>
 
             {tournaments && tournaments.length > 1 && (
               <TournamentToggle

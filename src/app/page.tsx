@@ -16,6 +16,9 @@ export default function LandingPage() {
             <a href="/leaderboard" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
               Leaderboard
             </a>
+            <a href="/learn" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
+              Learn
+            </a>
             <a href="#about" className="text-sm text-white/60 hover:text-white uppercase tracking-wider font-semibold transition-colors">
               About
             </a>
