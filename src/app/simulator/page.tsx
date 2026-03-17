@@ -168,7 +168,7 @@ export default function Home() {
   const [activeTournamentId, setActiveTournamentId] = useState<string | null>(null);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [announcerEnabled, setAnnouncerEnabled] = useState(false);
+  const [announcerEnabled, setAnnouncerEnabled] = useState(true);
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
   const [activeGender, setActiveGender] = useState<"men" | "women">("men");
 
