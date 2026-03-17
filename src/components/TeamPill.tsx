@@ -14,10 +14,10 @@ export function TeamPill({ team, isWinner, onTeamClick }: TeamPillProps) {
   if (!team) {
     return (
       <div className="flex items-center gap-1.5">
-        <span className="flex h-4 w-5 items-center justify-center rounded-sm text-[10px] font-bold bg-gray-700 text-gray-500">
+        <span className="flex h-4 w-5 items-center justify-center rounded-sm text-[10px] font-bold bg-[#1A2235] text-[#475569]">
           ?
         </span>
-        <span className="text-[11px] text-gray-500 italic">TBD</span>
+        <span className="text-[11px] text-[#475569] italic">TBD</span>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function TeamPill({ team, isWinner, onTeamClick }: TeamPillProps) {
       <span
         className={cn(
           "truncate text-[11px] leading-tight",
-          isWinner ? "font-bold text-white" : "text-gray-300",
+          isWinner ? "font-bold text-white" : "text-[#94A3B8]",
           onTeamClick && "hover:underline cursor-pointer"
         )}
         onClick={(e) => {

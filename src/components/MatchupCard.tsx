@@ -18,24 +18,24 @@ interface MatchupCardProps {
 
 const variants = {
   pending: {
-    opacity: 0.5,
-    borderColor: "rgba(255,255,255,0.06)",
+    opacity: 0.45,
+    borderColor: "rgba(255,255,255,0.05)",
     boxShadow: "none",
   },
   simulating: {
     opacity: 1,
-    borderColor: "#f97316",
-    boxShadow: "0 0 10px 2px rgba(249,115,22,0.4)",
+    borderColor: "#FF8C00",
+    boxShadow: "0 0 12px 2px rgba(255,140,0,0.3)",
   },
   completed: {
     opacity: 1,
-    borderColor: "rgba(34,197,94,0.25)",
+    borderColor: "rgba(0,229,160,0.2)",
     boxShadow: "none",
   },
   upset: {
     opacity: 1,
-    borderColor: "#ef4444",
-    boxShadow: "0 0 12px 2px rgba(239,68,68,0.45)",
+    borderColor: "#FF3B5C",
+    boxShadow: "0 0 14px 3px rgba(255,59,92,0.4)",
   },
 };
 
@@ -71,8 +71,8 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
   return (
     <motion.div
       className={cn(
-        "relative cursor-pointer rounded border bg-gray-900/80 select-none overflow-visible",
-        isSelected && "ring-1 ring-blue-500"
+        "relative cursor-pointer rounded border bg-[#151C2C] select-none overflow-visible",
+        isSelected && "ring-1 ring-[#3B82F6]"
       )}
       animate={animateValues}
       transition={isUpset ? { x: { duration: 0.4 } } : { duration: 0.3 }}
@@ -87,7 +87,7 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
 
       {game.status === "simulating" && (
         <motion.div
-          className="absolute inset-0 rounded bg-orange-500/10"
+          className="absolute inset-0 rounded bg-[#FF8C00]/10"
           animate={{ opacity: [0.1, 0.25, 0.1] }}
           transition={{ duration: 1, repeat: Infinity }}
         />
@@ -96,14 +96,14 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
       {/* Team A */}
       <div className={cn(
         "flex items-center justify-between px-1.5 py-0.5",
-        game.status === "completed" && game.winnerId === game.teamAId && "bg-green-500/10",
+        game.status === "completed" && game.winnerId === game.teamAId && "bg-[#00E5A0]/10",
         game.status === "completed" && game.winnerId !== game.teamAId && "opacity-40",
       )}>
         <TeamPill team={teamA} isWinner={game.winnerId === game.teamAId} onTeamClick={onTeamClick} />
         {scoreA !== undefined && (
           <span className={cn(
             "text-xs font-mono font-bold tabular-nums",
-            game.winnerId === game.teamAId ? "text-green-400" : "text-gray-500"
+            game.winnerId === game.teamAId ? "text-[#00E5A0]" : "text-[#475569]"
           )}>{scoreA}</span>
         )}
       </div>
@@ -113,21 +113,21 @@ export function MatchupCard({ game, teams, onSelect, onTeamClick, isSelected }: 
       {/* Team B */}
       <div className={cn(
         "flex items-center justify-between px-1.5 py-0.5",
-        game.status === "completed" && game.winnerId === game.teamBId && "bg-green-500/10",
+        game.status === "completed" && game.winnerId === game.teamBId && "bg-[#00E5A0]/10",
         game.status === "completed" && game.winnerId !== game.teamBId && "opacity-40",
       )}>
         <TeamPill team={teamB} isWinner={game.winnerId === game.teamBId} onTeamClick={onTeamClick} />
         {scoreB !== undefined && (
           <span className={cn(
             "text-xs font-mono font-bold tabular-nums",
-            game.winnerId === game.teamBId ? "text-green-400" : "text-gray-500"
+            game.winnerId === game.teamBId ? "text-[#00E5A0]" : "text-[#475569]"
           )}>{scoreB}</span>
         )}
       </div>
 
       {/* Upset badge */}
       {isUpset && (
-        <div className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1 py-0 text-[9px] font-bold text-white shadow">
+        <div className="absolute -top-1.5 -right-1.5 rounded-full bg-[#FF3B5C] px-1 py-0 text-[9px] font-bold text-white shadow">
           UPSET
         </div>
       )}

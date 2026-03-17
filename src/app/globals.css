@@ -117,13 +117,33 @@
 }
 
 @layer base {
+  :root {
+    --bg-primary: #0A0E17;
+    --bg-secondary: #111827;
+    --bg-card: #151C2C;
+    --bg-elevated: #1A2235;
+    --accent-primary: #00E5A0;
+    --accent-secondary: #FFB800;
+    --accent-danger: #FF3B5C;
+    --accent-simulating: #FF8C00;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-tertiary: #475569;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
     @apply font-sans;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+
+  body {
+    @apply bg-[#0A0E17] text-[#F8FAFC];
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
 }

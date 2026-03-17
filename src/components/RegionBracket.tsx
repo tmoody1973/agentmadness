@@ -16,14 +16,14 @@ interface RegionBracketProps {
 }
 
 export const REGION_COLORS: Record<string, string> = {
-  East: "#3b82f6",
-  South: "#22c55e",
-  West: "#f97316",
-  Midwest: "#a855f7",
-  "Fort Worth 1": "#3b82f6",
-  "Sacramento 4": "#22c55e",
-  "Fort Worth 3": "#f97316",
-  "Sacramento 2": "#a855f7",
+  East: "#3B82F6",
+  South: "#00E5A0",
+  West: "#FF8C00",
+  Midwest: "#A855F7",
+  "Fort Worth 1": "#3B82F6",
+  "Sacramento 4": "#00E5A0",
+  "Fort Worth 3": "#FF8C00",
+  "Sacramento 2": "#A855F7",
 };
 
 // Layout constants
@@ -321,11 +321,11 @@ export function RegionBracket({
         )}
       >
         <div
-          className="h-2.5 w-2.5 rounded-full shrink-0"
+          className="h-2 w-2 rounded-full shrink-0"
           style={{ backgroundColor: accentColor }}
         />
         <span
-          className="text-[11px] font-bold uppercase tracking-widest"
+          className="text-[11px] font-extrabold uppercase tracking-[0.12em]"
           style={{ color: accentColor }}
         >
           {regionName}

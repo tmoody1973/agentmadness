@@ -35,20 +35,20 @@ export function StatsOverlay({ tournament, teams, upsets }: StatsOverlayProps) {
     : null;
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-white/10 bg-gray-900/60 px-4 py-3 text-sm">
+    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-white/5 bg-[#111827]/60 px-4 py-2.5">
       <Stat label="Current Round" value={currentRoundLabel} />
       <div className="h-4 w-px bg-white/10" />
-      <Stat label="Teams Alive" value={`${aliveCount}`} />
+      <Stat label="Teams Alive" value={`${aliveCount}`} mono />
       <div className="h-4 w-px bg-white/10" />
-      <Stat label="🔥 Upsets" value={`${tournament.upsetCount}`} highlight="red" />
+      <Stat label="Upsets" value={`${tournament.upsetCount}`} highlight="danger" mono />
       {biggestUpsetDesc && (
         <>
           <div className="h-4 w-px bg-white/10" />
           <div className="flex flex-col">
-            <span className="text-xs text-gray-500 uppercase tracking-wider">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
               Biggest Upset
             </span>
-            <span className="text-sm text-red-300 font-medium">
+            <span className="text-xs font-bold text-[#FF3B5C]">
               {biggestUpsetDesc}
             </span>
           </div>
@@ -58,10 +58,10 @@ export function StatsOverlay({ tournament, teams, upsets }: StatsOverlayProps) {
         <>
           <div className="h-4 w-px bg-white/10" />
           <div className="flex flex-col">
-            <span className="text-xs text-gray-500 uppercase tracking-wider">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
               🏆 Champion
             </span>
-            <span className="text-sm text-yellow-300 font-bold">
+            <span className="text-xs font-bold text-[#FFB800]">
               {getTeamById(teams, tournament.champion)?.name ?? "—"}
             </span>
           </div>
@@ -75,26 +75,30 @@ function Stat({
   label,
   value,
   highlight,
+  mono,
 }: {
   label: string;
   value: string;
-  highlight?: "red" | "yellow" | "blue";
+  highlight?: "danger" | "gold" | "teal";
+  mono?: boolean;
 }) {
   const valueColor =
-    highlight === "red"
-      ? "text-red-300"
-      : highlight === "yellow"
-      ? "text-yellow-300"
-      : highlight === "blue"
-      ? "text-blue-300"
+    highlight === "danger"
+      ? "text-[#FF3B5C]"
+      : highlight === "gold"
+      ? "text-[#FFB800]"
+      : highlight === "teal"
+      ? "text-[#00E5A0]"
       : "text-white";
 
   return (
     <div className="flex flex-col">
-      <span className="text-xs text-gray-500 uppercase tracking-wider">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
         {label}
       </span>
-      <span className={`text-sm font-semibold ${valueColor}`}>{value}</span>
+      <span className={`text-sm font-extrabold uppercase tracking-tight ${valueColor} ${mono ? "font-mono tabular-nums" : ""}`}>
+        {value}
+      </span>
     </div>
   );
 }

@@ -47,11 +47,11 @@ function getHistoricalNote(seedA: number, seedB: number): string | null {
 
 function SidebarHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 shrink-0">
-      <span className="text-xs font-bold uppercase tracking-widest text-gray-400">{title}</span>
+    <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 shrink-0">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">{title}</span>
       <button
         onClick={onClose}
-        className="rounded-md p-1 text-gray-500 hover:bg-white/10 hover:text-white transition-colors"
+        className="rounded-md p-1 text-[#475569] hover:bg-white/10 hover:text-white transition-colors"
         aria-label="Close sidebar"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -74,12 +74,12 @@ function StatBox({
   highlight?: boolean;
 }) {
   return (
-    <div className="bg-gray-800/60 rounded-lg px-3 py-2.5 text-center">
-      <div className="text-[9px] uppercase tracking-wider text-gray-500 mb-0.5">{label}</div>
-      <div className={`text-sm font-bold tabular-nums ${highlight ? "text-green-400" : "text-white"}`}>
+    <div className="bg-[#0A0E17] border border-white/5 rounded-lg px-3 py-2.5 text-center">
+      <div className="text-[9px] font-semibold uppercase tracking-[0.15em] text-[#475569] mb-0.5">{label}</div>
+      <div className={`text-sm font-bold font-mono tabular-nums ${highlight ? "text-[#00E5A0]" : "text-white"}`}>
         {value}
       </div>
-      {sub && <div className="text-[9px] text-gray-600 mt-0.5">{sub}</div>}
+      {sub && <div className="text-[9px] text-[#475569] mt-0.5">{sub}</div>}
     </div>
   );
 }
@@ -89,23 +89,23 @@ function WinProbBar({ prob, labelA, labelB }: { prob: number; labelA: string; la
   const pctB = 100 - pctA;
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between text-[10px] text-gray-400">
+      <div className="flex justify-between text-[10px] font-medium text-[#94A3B8]">
         <span className="truncate max-w-[120px]">{labelA}</span>
         <span className="truncate max-w-[120px] text-right">{labelB}</span>
       </div>
-      <div className="flex h-2 rounded-full overflow-hidden bg-gray-700">
+      <div className="flex h-2 rounded-full overflow-hidden bg-[#1A2235]">
         <div
-          className="bg-blue-500 transition-all duration-500"
-          style={{ width: `${pctA}%` }}
+          className="transition-all duration-500"
+          style={{ width: `${pctA}%`, backgroundColor: "#00E5A0" }}
         />
         <div
-          className="bg-red-500 transition-all duration-500"
-          style={{ width: `${pctB}%` }}
+          className="transition-all duration-500"
+          style={{ width: `${pctB}%`, backgroundColor: "#FF3B5C" }}
         />
       </div>
-      <div className="flex justify-between text-[11px] font-bold">
-        <span className="text-blue-400">{pctA}%</span>
-        <span className="text-red-400">{pctB}%</span>
+      <div className="flex justify-between text-[11px] font-bold font-mono tabular-nums">
+        <span className="text-[#00E5A0]">{pctA}%</span>
+        <span className="text-[#FF3B5C]">{pctB}%</span>
       </div>
     </div>
   );
@@ -147,18 +147,18 @@ function GamePanel({
     <div className="flex flex-col gap-4 px-4 py-4 overflow-y-auto">
       {/* Round label */}
       <div className="flex items-center gap-2">
-        <span className="rounded bg-blue-900/50 px-2 py-0.5 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">
+        <span className="rounded bg-[#1A2235] border border-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#3B82F6]">
           {roundLabel}
         </span>
         {game.region && (
-          <span className="text-[10px] text-gray-500">{game.region}</span>
+          <span className="text-[10px] font-medium text-[#475569]">{game.region}</span>
         )}
       </div>
 
       {/* Score or teams */}
       {isCompleted && winner && loser ? (
         <div className="flex flex-col gap-2">
-          <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${game.isUpset ? "bg-red-900/20 border border-red-500/30" : "bg-green-900/20 border border-green-500/20"}`}>
+          <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${game.isUpset ? "bg-[#FF3B5C]/10 border border-[#FF3B5C]/30" : "bg-[#00E5A0]/10 border border-[#00E5A0]/20"}`}>
             <div className="flex items-center gap-2 min-w-0">
               <span
                 className="flex h-5 w-6 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white"
@@ -168,12 +168,12 @@ function GamePanel({
               </span>
               <span className="font-bold text-white text-sm truncate">{winner.name}</span>
             </div>
-            <span className="text-green-400 font-mono font-bold text-sm ml-2 shrink-0">
+            <span className="text-[#00E5A0] font-mono font-bold text-sm ml-2 shrink-0 tabular-nums">
               {game.winnerId === game.teamAId ? game.winnerScore : game.loserScore}
             </span>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg px-3 py-2 bg-gray-800/40 border border-white/5 opacity-60">
+          <div className="flex items-center justify-between rounded-lg px-3 py-2 bg-[#0A0E17] border border-white/5 opacity-60">
             <div className="flex items-center gap-2 min-w-0">
               <span
                 className="flex h-5 w-6 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white"
@@ -181,18 +181,18 @@ function GamePanel({
               >
                 {loser.seed}
               </span>
-              <span className="text-gray-400 text-sm truncate">{loser.name}</span>
+              <span className="text-[#94A3B8] text-sm truncate">{loser.name}</span>
             </div>
-            <span className="text-gray-500 font-mono text-sm ml-2 shrink-0">
+            <span className="text-[#475569] font-mono text-sm ml-2 shrink-0 tabular-nums">
               {game.winnerId === game.teamAId ? game.loserScore : game.winnerScore}
             </span>
           </div>
 
           {game.isUpset && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-900/30 border border-red-500/30 px-3 py-2">
-              <span className="text-red-400 text-sm font-bold">🔥 UPSET</span>
+            <div className="flex items-center gap-2 rounded-lg bg-[#FF3B5C]/10 border border-[#FF3B5C]/30 px-3 py-2">
+              <span className="text-[#FF3B5C] text-sm font-bold uppercase tracking-wide">🔥 UPSET</span>
               {game.upsetMagnitude !== undefined && (
-                <span className="text-xs text-red-300/70">
+                <span className="text-xs text-[#FF3B5C]/70 font-mono tabular-nums">
                   Magnitude: {game.upsetMagnitude.toFixed(1)}
                 </span>
               )}
@@ -202,7 +202,7 @@ function GamePanel({
       ) : (
         <div className="flex flex-col gap-2">
           {[teamA, teamB].map((t, i) => (
-            <div key={i} className="flex items-center gap-2 rounded-lg px-3 py-2 bg-gray-800/40 border border-white/5">
+            <div key={i} className="flex items-center gap-2 rounded-lg px-3 py-2 bg-[#0A0E17] border border-white/5">
               {t ? (
                 <>
                   <span
@@ -211,11 +211,11 @@ function GamePanel({
                   >
                     {t.seed}
                   </span>
-                  <span className="text-gray-200 text-sm truncate">{t.name}</span>
-                  <span className="ml-auto text-[10px] text-gray-500 shrink-0">{t.record}</span>
+                  <span className="text-[#F8FAFC] text-sm font-semibold truncate">{t.name}</span>
+                  <span className="ml-auto text-[10px] text-[#475569] font-mono shrink-0">{t.record}</span>
                 </>
               ) : (
-                <span className="text-gray-600 text-sm italic">TBD</span>
+                <span className="text-[#475569] text-sm italic">TBD</span>
               )}
             </div>
           ))}
@@ -225,7 +225,7 @@ function GamePanel({
       {/* Win probability (always show for pending, show historical for completed) */}
       {teamA && teamB && (
         <div className="flex flex-col gap-1.5">
-          <div className="text-[10px] uppercase tracking-wider text-gray-500">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
             {isPending ? "Win Probability" : "Pre-game Probability"}
           </div>
           <WinProbBar
@@ -234,7 +234,7 @@ function GamePanel({
             labelB={teamB.name}
           />
           {historicalNote && (
-            <p className="text-[10px] text-gray-600 italic">{historicalNote}</p>
+            <p className="text-[10px] text-[#475569] italic">{historicalNote}</p>
           )}
         </div>
       )}
@@ -244,15 +244,15 @@ function GamePanel({
         <>
           {game.mvp && (
             <div className="flex flex-col gap-1">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500">MVP</div>
-              <div className="text-sm text-yellow-400 font-medium">⭐ {game.mvp}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">MVP</div>
+              <div className="text-sm text-[#FFB800] font-bold">⭐ {game.mvp}</div>
             </div>
           )}
 
           {game.keyMoment && (
             <div className="flex flex-col gap-1">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500">Key Moment</div>
-              <p className="text-xs text-gray-300 italic leading-relaxed">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">Key Moment</div>
+              <p className="text-xs text-[#94A3B8] italic leading-relaxed">
                 &ldquo;{game.keyMoment}&rdquo;
               </p>
             </div>
@@ -260,8 +260,8 @@ function GamePanel({
 
           {game.gameNarrative && (
             <div className="flex flex-col gap-1">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500">Narrative</div>
-              <p className="text-xs text-gray-300 leading-relaxed">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">Narrative</div>
+              <p className="text-xs text-[#94A3B8] leading-relaxed">
                 <TypeAnimation
                   key={game._id}
                   sequence={[game.gameNarrative]}
@@ -274,7 +274,7 @@ function GamePanel({
 
           {announcerEnabled && game.audioStorageId && (
             <div className="flex flex-col gap-1">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500">Announcer Audio</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">Announcer Audio</div>
               <AudioPlayer storageId={game.audioStorageId} autoPlay={announcerEnabled} />
             </div>
           )}
@@ -304,15 +304,15 @@ function TeamPanel({ team }: { team: Team }) {
           {team.seed}
         </span>
         <div className="min-w-0">
-          <div className="font-bold text-white text-base truncate">{team.name}</div>
-          <div className="text-[10px] text-gray-400">
+          <div className="font-extrabold text-white text-base uppercase tracking-tight truncate">{team.name}</div>
+          <div className="text-[10px] font-medium text-[#94A3B8]">
             {team.conference.toUpperCase()} · {team.region} · {team.record}
           </div>
         </div>
       </div>
 
       {/* Status badge */}
-      <div className={`rounded-lg px-3 py-2 text-xs font-medium text-center ${team.eliminated ? "bg-red-900/30 border border-red-500/30 text-red-400" : "bg-green-900/30 border border-green-500/30 text-green-400"}`}>
+      <div className={`rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-center ${team.eliminated ? "bg-[#FF3B5C]/10 border border-[#FF3B5C]/30 text-[#FF3B5C]" : "bg-[#00E5A0]/10 border border-[#00E5A0]/30 text-[#00E5A0]"}`}>
         {team.eliminated
           ? `Eliminated in ${team.eliminatedRound ?? "unknown round"}`
           : "Still Dancing 💃"}
@@ -320,7 +320,7 @@ function TeamPanel({ team }: { team: Team }) {
 
       {/* Core stats */}
       <div className="flex flex-col gap-1">
-        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Advanced Stats</div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] mb-1">Advanced Stats</div>
         <div className="grid grid-cols-2 gap-2">
           <StatBox label="Adj OE" value={team.adjOE.toFixed(1)} sub="pts/100" />
           <StatBox label="Adj DE" value={team.adjDE.toFixed(1)} sub="pts/100" />
@@ -336,7 +336,7 @@ function TeamPanel({ team }: { team: Team }) {
 
       {/* Upset factors */}
       <div className="flex flex-col gap-1">
-        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Upset Factors</div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] mb-1">Upset Factors</div>
         <div className="grid grid-cols-2 gap-2">
           <StatBox label="Volatility" value={team.volatility.toFixed(1)} sub="/10" />
           <StatBox label="Experience" value={team.tournamentExperience.toFixed(1)} sub="/10" />
@@ -348,12 +348,12 @@ function TeamPanel({ team }: { team: Team }) {
       {/* Style traits */}
       {team.styleTraits.length > 0 && (
         <div className="flex flex-col gap-2">
-          <div className="text-[10px] uppercase tracking-wider text-gray-500">Playing Style</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">Playing Style</div>
           <div className="flex flex-wrap gap-1.5">
             {team.styleTraits.map((trait) => (
               <span
                 key={trait}
-                className="rounded-full bg-white/5 border border-white/10 px-2 py-0.5 text-[10px] text-gray-300"
+                className="rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 text-[10px] font-medium text-[#94A3B8]"
               >
                 {trait}
               </span>
@@ -365,19 +365,19 @@ function TeamPanel({ team }: { team: Team }) {
       {/* Key players */}
       {team.keyPlayers && (
         <div className="flex flex-col gap-1">
-          <div className="text-[10px] uppercase tracking-wider text-gray-500">Key Players</div>
-          <p className="text-xs text-gray-300 leading-relaxed">{team.keyPlayers}</p>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">Key Players</div>
+          <p className="text-xs text-[#94A3B8] leading-relaxed">{team.keyPlayers}</p>
         </div>
       )}
 
       {/* AI scouting report */}
       {team.perplexityContext && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 rounded-lg bg-[#0A0E17] border border-white/5 p-3">
           <div className="flex items-center gap-1.5">
-            <div className="text-[10px] uppercase tracking-wider text-gray-500">AI Scouting Report</div>
-            <span className="text-[9px] text-gray-600 bg-white/5 rounded px-1">Perplexity + Claude</span>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">🔍 AI Scouting Report</div>
+            <span className="text-[9px] font-medium text-[#00E5A0] bg-[#00E5A0]/10 border border-[#00E5A0]/20 rounded px-1.5 py-0.5">Perplexity + Claude</span>
           </div>
-          <p className="text-xs text-gray-300 leading-relaxed">{team.perplexityContext}</p>
+          <p className="text-xs text-[#94A3B8] leading-relaxed">{team.perplexityContext}</p>
         </div>
       )}
     </div>
@@ -393,12 +393,12 @@ function EmptyState() {
     <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center">
       <div className="text-4xl">🏀</div>
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold text-white">March Madness Agent Sim</p>
-        <p className="text-xs text-gray-500 leading-relaxed">
-          AI-powered bracket simulation
+        <p className="text-sm font-extrabold uppercase tracking-tight text-white">March Madness Agent Sim</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#00E5A0]">
+          AI-powered simulation
         </p>
       </div>
-      <div className="text-[11px] text-gray-600 leading-relaxed">
+      <div className="text-[11px] text-[#475569] leading-relaxed">
         Click any matchup card to view game details,
         or click a team name to view their full profile.
       </div>
@@ -430,7 +430,7 @@ export function Sidebar({
 
   return (
     <aside
-      className="flex flex-col bg-gray-900 border-l border-white/10 overflow-hidden shrink-0"
+      className="flex flex-col bg-[#111827] border-l border-white/5 overflow-hidden shrink-0"
       style={{ width: 350 }}
     >
       <AnimatePresence mode="wait">

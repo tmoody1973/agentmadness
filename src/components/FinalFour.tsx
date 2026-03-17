@@ -33,7 +33,7 @@ export function FinalFour({
     <div className="flex flex-col items-center gap-3 px-2">
       {/* Header */}
       <div className="text-center">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-yellow-400">
+        <span className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
           Final Four
         </span>
       </div>
@@ -42,7 +42,7 @@ export function FinalFour({
       <div className="flex items-center gap-3">
         {/* Semifinal 1 */}
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
             Semifinal 1
           </span>
           {semi1 ? (
@@ -78,10 +78,10 @@ export function FinalFour({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider">
+                  <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
                     🏆 Championship
                   </span>
-                  <div className="ring-1 ring-yellow-400/40 rounded-xl p-1 bg-yellow-900/10">
+                  <div className="ring-1 ring-[#FFB800]/40 rounded-xl p-1 bg-[#FFB800]/5">
                     <MatchupCard
                       game={champGame}
                       teams={teams}
@@ -93,7 +93,7 @@ export function FinalFour({
                 </motion.div>
               ) : (
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider">
+                  <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#FFB800]">
                     🏆 Championship
                   </span>
                   <EmptySlot label="TBD" />
@@ -106,7 +106,7 @@ export function FinalFour({
 
         {/* Semifinal 2 */}
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
             Semifinal 2
           </span>
           {semi2 ? (
@@ -133,17 +133,17 @@ export function FinalFour({
       {/* Champion banner */}
       {championTeam && (
         <motion.div
-          className="flex flex-col items-center gap-1.5 rounded-xl bg-yellow-400/10 border border-yellow-400/30 px-5 py-3 text-center mt-2"
+          className="flex flex-col items-center gap-1.5 rounded-xl bg-[#FFB800]/10 border border-[#FFB800]/30 px-5 py-3 text-center mt-2"
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
         >
           <div className="text-2xl">🏆</div>
-          <div className="text-[10px] text-yellow-400 uppercase tracking-widest font-semibold">
+          <div className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-[#FFB800]">
             Champion
           </div>
-          <div className="text-base font-bold text-white">{championTeam.name}</div>
-          <div className="text-xs text-gray-400">
+          <div className="text-base font-extrabold uppercase tracking-tight text-white">{championTeam.name}</div>
+          <div className="text-xs font-medium text-[#94A3B8]">
             #{championTeam.seed} seed · {championTeam.conference}
           </div>
         </motion.div>
@@ -154,7 +154,7 @@ export function FinalFour({
 
 function EmptySlot({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-center rounded border border-white/10 bg-gray-900/50 text-xs text-gray-600 italic"
+    <div className="flex items-center justify-center rounded border border-white/5 bg-[#151C2C] text-xs text-[#475569] italic"
       style={{ width: 170, height: 52 }}>
       {label}
     </div>

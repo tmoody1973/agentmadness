@@ -47,17 +47,17 @@ export function SimControls({
     tournament.currentRound;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-gray-900/80 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-[#111827]/80 px-4 py-3">
       {/* Round info */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500 uppercase tracking-wider">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
           Round
         </span>
-        <span className="rounded bg-blue-900/50 px-2 py-0.5 text-sm font-semibold text-blue-300">
+        <span className="rounded bg-[#1A2235] border border-white/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white font-mono tabular-nums">
           {currentRoundLabel}
         </span>
         {upsetCount > 0 && (
-          <span className="flex items-center gap-1 rounded bg-red-900/50 px-2 py-0.5 text-sm font-semibold text-red-300">
+          <span className="flex items-center gap-1 rounded bg-[#FF3B5C]/10 border border-[#FF3B5C]/30 px-2 py-0.5 text-xs font-bold text-[#FF3B5C] font-mono tabular-nums">
             🔥 {upsetCount} upsets
           </span>
         )}
@@ -67,16 +67,16 @@ export function SimControls({
 
       {/* Speed selector */}
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500 mr-1">Speed:</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] mr-1">Speed:</span>
         {SPEEDS.map(({ label, value }) => (
           <button
             key={value}
             onClick={() => setSpeed({ tournamentId: id, speed: value })}
             className={cn(
-              "rounded px-2 py-1 text-xs font-medium transition-all",
+              "rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all",
               tournament.speed === value
-                ? "bg-white/15 text-white"
-                : "text-gray-500 hover:text-white"
+                ? "bg-white/5 border border-[#00E5A0]/50 text-[#00E5A0]"
+                : "bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20"
             )}
           >
             {label}
@@ -97,15 +97,15 @@ export function SimControls({
             })
           }
           className={cn(
-            "rounded-lg px-3 py-1.5 text-sm font-semibold transition-all",
+            "rounded-lg px-5 py-2 text-sm font-bold uppercase tracking-wide transition-all",
             isSimulating || isCompleted || !canSimulate
-              ? "cursor-not-allowed opacity-40 bg-gray-700 text-gray-400"
-              : "bg-blue-600 text-white hover:bg-blue-500 active:scale-95"
+              ? "cursor-not-allowed opacity-40 bg-[#1A2235] text-[#475569]"
+              : "bg-[#00E5A0] text-[#0A0E17] hover:bg-[#00C890] active:scale-95"
           )}
         >
           {isSimulating ? (
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-3 w-3 rounded-full border-2 border-blue-300 border-t-transparent animate-spin" />
+              <span className="inline-block h-3 w-3 rounded-full border-2 border-[#0A0E17] border-t-transparent animate-spin" />
               Simulating…
             </span>
           ) : (
@@ -117,10 +117,10 @@ export function SimControls({
           disabled={isSimulating || isCompleted || !canSimulate}
           onClick={() => runSimulateAll({ tournamentId: id })}
           className={cn(
-            "rounded-lg px-3 py-1.5 text-sm font-semibold transition-all",
+            "rounded-lg px-5 py-2 text-sm font-bold uppercase tracking-wide transition-all",
             isSimulating || isCompleted || !canSimulate
-              ? "cursor-not-allowed opacity-40 bg-gray-700 text-gray-400"
-              : "bg-purple-600 text-white hover:bg-purple-500 active:scale-95"
+              ? "cursor-not-allowed opacity-40 bg-[#1A2235] text-[#475569]"
+              : "bg-[#FFB800] text-[#0A0E17] hover:bg-[#E5A600] active:scale-95"
           )}
         >
           ⚡ Simulate All
@@ -128,17 +128,17 @@ export function SimControls({
 
         {/* Auth / rate-limit status */}
         {!isAuthenticated && (
-          <span className="text-xs text-gray-500 italic">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#475569] italic">
             Sign in to simulate
           </span>
         )}
         {isAuthenticated && !rateLimitAllowed && (
-          <span className="text-xs text-red-400 font-medium">
+          <span className="text-xs font-bold text-[#FF3B5C]">
             Daily limit reached
           </span>
         )}
         {isAuthenticated && rateLimitAllowed && (
-          <span className="text-xs text-gray-500">
+          <span className="text-[10px] font-mono tabular-nums text-[#475569]">
             {remaining} run{remaining !== 1 ? "s" : ""} remaining today
           </span>
         )}
@@ -150,10 +150,10 @@ export function SimControls({
       <button
         onClick={() => onAnnouncerToggle(!announcerEnabled)}
         className={cn(
-          "rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
+          "rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all",
           announcerEnabled
-            ? "bg-green-800/60 text-green-300 border border-green-600/40"
-            : "bg-gray-800 text-gray-500 border border-white/10"
+            ? "bg-[#00E5A0]/10 text-[#00E5A0] border border-[#00E5A0]/30"
+            : "bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20"
         )}
       >
         🎙 Announcer {announcerEnabled ? "ON" : "OFF"}
@@ -162,7 +162,7 @@ export function SimControls({
       {/* Reset button */}
       <button
         onClick={() => resetTournament({ tournamentId: id })}
-        className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-red-400 transition-colors"
+        className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#475569] hover:text-[#FF3B5C] transition-colors"
       >
         ↺ Reset
       </button>

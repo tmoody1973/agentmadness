@@ -51,21 +51,21 @@ function NarrativePanel({
       : getTeamById(teams, game.teamAId);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gray-900/95 backdrop-blur-md shadow-2xl px-5 py-4 flex flex-col gap-3">
+    <div className="rounded-2xl border border-white/5 bg-[#111827]/95 backdrop-blur-md shadow-2xl px-5 py-4 flex flex-col gap-3">
       {/* Score line */}
       {winner && loser && (
         <div className="flex items-center gap-3 text-sm">
-          <span className="font-bold text-white">
+          <span className="font-extrabold uppercase tracking-tight text-white">
             #{winner.seed} {winner.name}{" "}
-            <span className="text-green-400">{game.winnerScore}</span>
+            <span className="text-[#00E5A0] font-mono tabular-nums">{game.winnerScore}</span>
           </span>
-          <span className="text-gray-500">vs</span>
-          <span className="text-gray-400">
+          <span className="text-[#475569] text-xs font-semibold">vs</span>
+          <span className="text-[#94A3B8]">
             #{loser.seed} {loser.name}{" "}
-            <span className="text-gray-500">{game.loserScore}</span>
+            <span className="text-[#475569] font-mono tabular-nums">{game.loserScore}</span>
           </span>
           {game.isUpset && (
-            <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+            <span className="ml-auto rounded-full bg-[#FF3B5C] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">
               🔥 UPSET
             </span>
           )}
@@ -74,7 +74,7 @@ function NarrativePanel({
 
       {/* Narrative typewriter */}
       {game.gameNarrative && (
-        <div className="text-sm text-gray-300 leading-relaxed min-h-[3em]">
+        <div className="text-sm text-[#94A3B8] leading-relaxed min-h-[3em]">
           <TypeAnimation
             key={game._id}
             sequence={[game.gameNarrative]}
@@ -85,20 +85,20 @@ function NarrativePanel({
       )}
 
       {/* Meta */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-[#475569]">
         {game.mvp && (
-          <span className="text-yellow-400">⭐ MVP: {game.mvp}</span>
+          <span className="text-[#FFB800] font-bold">⭐ MVP: {game.mvp}</span>
         )}
         {game.winProbability !== undefined && (
           <span>
             Win prob:{" "}
-            <span className="text-white">
+            <span className="text-[#00E5A0] font-mono tabular-nums font-bold">
               {Math.round(game.winProbability * 100)}%
             </span>
           </span>
         )}
         {game.keyMoment && (
-          <span className="text-gray-400 italic">&ldquo;{game.keyMoment}&rdquo;</span>
+          <span className="text-[#94A3B8] italic">&ldquo;{game.keyMoment}&rdquo;</span>
         )}
       </div>
 

@@ -90,10 +90,10 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950">
+      <div className="flex min-h-screen items-center justify-center bg-[#0A0E17]">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
-          <p className="text-gray-400 text-sm">Loading bracket…</p>
+          <div className="h-10 w-10 rounded-full border-4 border-[#00E5A0] border-t-transparent animate-spin" />
+          <p className="text-[#94A3B8] text-sm font-medium uppercase tracking-widest">Loading bracket…</p>
         </div>
       </div>
     );
@@ -101,11 +101,11 @@ export default function Home() {
 
   if (!tournaments || tournaments.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950">
+      <div className="flex min-h-screen items-center justify-center bg-[#0A0E17]">
         <div className="text-center">
           <div className="text-5xl mb-4">🏀</div>
-          <h1 className="text-2xl font-bold text-white mb-2">No Tournaments Found</h1>
-          <p className="text-gray-400">
+          <h1 className="text-2xl font-extrabold uppercase tracking-tight text-white mb-2">No Tournaments Found</h1>
+          <p className="text-[#94A3B8] text-sm">
             Run the seed script to initialize the tournament data.
           </p>
         </div>
@@ -116,19 +116,21 @@ export default function Home() {
   const { tournament, teams, games } = bracketState ?? {};
 
   return (
-    <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
+    <div className="flex h-screen bg-[#0A0E17] text-[#F8FAFC] overflow-hidden">
       {/* ── Main area ── */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="shrink-0 z-30 border-b border-white/10 bg-gray-950/90 backdrop-blur-md">
-          <div className="flex items-center justify-between px-4 py-3">
+        <header className="shrink-0 z-30 border-b border-white/5 bg-[#0A0E17]/90 backdrop-blur-sm">
+          <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-3">
-              <span className="text-xl">🏆</span>
+              <span className="text-2xl">🏀</span>
               <div>
-                <h1 className="text-base font-bold leading-tight text-white">
-                  March Madness Sim
+                <h1 className="text-lg font-extrabold uppercase tracking-tight text-white leading-none">
+                  March Madness
                 </h1>
-                <p className="text-[10px] text-gray-500">2025 NCAA Tournament</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#00E5A0]">
+                  Agent Simulator
+                </p>
               </div>
             </div>
 
@@ -141,12 +143,12 @@ export default function Home() {
             )}
 
             <div className="flex items-center gap-4">
-              <a href="/leaderboard" className="text-sm text-gray-400 hover:text-white transition-colors">
+              <a href="/leaderboard" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
                 Leaderboard
               </a>
               {!isSignedIn ? (
                 <SignInButton mode="modal">
-                  <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors">
+                  <button className="rounded-lg bg-[#00E5A0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0A0E17] hover:bg-[#00C890] transition-colors">
                     Sign in to Simulate
                   </button>
                 </SignInButton>
@@ -160,7 +162,7 @@ export default function Home() {
         {/* Champion banner */}
         {tournament?.champion && (
           <div className="shrink-0 z-20 px-4 py-2">
-            <div className="rounded-xl bg-yellow-500/10 border border-yellow-400/30 px-4 py-2 text-center text-sm font-semibold text-yellow-300">
+            <div className="rounded-xl bg-[#FFB800]/10 border border-[#FFB800]/30 px-4 py-2 text-center text-sm font-bold uppercase tracking-wide text-[#FFB800]">
               🏆 Tournament Complete! Champion:{" "}
               {teams?.find((t) => t._id === tournament.champion)?.name ?? "Unknown"}
             </div>
@@ -230,22 +232,22 @@ export default function Home() {
 
       {/* ── Zoom controls (floating, above sidebar) ── */}
       <div
-        className="fixed bottom-4 z-20 flex items-center gap-1 rounded-xl border border-white/10 bg-gray-900/90 backdrop-blur-md px-2 py-1.5 shadow-xl"
+        className="fixed bottom-4 z-20 flex items-center gap-1 rounded-xl border border-white/10 bg-[#111827]/90 backdrop-blur-md px-2 py-1.5 shadow-xl"
         style={{ right: 365 }}
       >
         <button
           onClick={() => setZoom((z) => Math.min(ZOOM_MAX, Math.round((z + ZOOM_STEP) * 10) / 10))}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-colors text-sm font-bold"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#94A3B8] hover:bg-white/10 hover:text-white transition-colors text-sm font-bold"
           title="Zoom in"
         >
           +
         </button>
-        <span className="text-[11px] text-gray-400 tabular-nums min-w-[36px] text-center">
+        <span className="text-[11px] font-mono tabular-nums text-[#94A3B8] min-w-[36px] text-center">
           {Math.round(zoom * 100)}%
         </span>
         <button
           onClick={() => setZoom((z) => Math.max(ZOOM_MIN, Math.round((z - ZOOM_STEP) * 10) / 10))}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-colors text-sm font-bold"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#94A3B8] hover:bg-white/10 hover:text-white transition-colors text-sm font-bold"
           title="Zoom out"
         >
           −
@@ -253,7 +255,7 @@ export default function Home() {
         <div className="w-px h-4 bg-white/10 mx-1" />
         <button
           onClick={handleFitZoom}
-          className="rounded-lg px-2 py-0.5 text-[10px] text-gray-400 hover:bg-white/10 hover:text-white transition-colors font-medium"
+          className="rounded-lg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] hover:bg-white/10 hover:text-white transition-colors"
           title="Reset zoom"
         >
           Fit

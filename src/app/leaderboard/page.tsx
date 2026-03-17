@@ -13,41 +13,43 @@ export default function LeaderboardPage() {
   const upsetStats = useQuery(api.leaderboard.getUpsetStats, { gender });
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
+    <main className="min-h-screen bg-[#0A0E17] text-[#F8FAFC]">
       {/* Header */}
-      <header className="border-b border-white/10 px-6 py-4">
+      <header className="border-b border-white/5 px-6 py-4 bg-[#0A0E17]/90 backdrop-blur-sm">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🏆</span>
             <div>
-              <h1 className="text-xl font-bold">Leaderboard</h1>
-              <p className="text-xs text-gray-400">Aggregate results across all AI simulations</p>
+              <h1 className="text-xl font-extrabold uppercase tracking-tight text-white">Leaderboard</h1>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
+                Aggregate results across all AI simulations
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
+            <a href="/" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] hover:text-white transition-colors">
               ← Back to Bracket
             </a>
-            <div className="flex rounded-lg border border-white/10 overflow-hidden">
+            <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-[#111827] p-1">
               <button
                 onClick={() => setGender("men")}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-lg px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
                   gender === "men"
-                    ? "bg-blue-600 text-white"
-                    : "bg-transparent text-gray-400 hover:text-white"
+                    ? "bg-[#3B82F6] text-white"
+                    : "bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20"
                 }`}
               >
-                Men's
+                Men&apos;s
               </button>
               <button
                 onClick={() => setGender("women")}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-lg px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
                   gender === "women"
-                    ? "bg-pink-600 text-white"
-                    : "bg-transparent text-gray-400 hover:text-white"
+                    ? "bg-[#A855F7] text-white"
+                    : "bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20"
                 }`}
               >
-                Women's
+                Women&apos;s
               </button>
             </div>
           </div>
@@ -60,20 +62,20 @@ export default function LeaderboardPage() {
           <div className="grid grid-cols-4 gap-4 mb-8">
             <StatCard label="Total Simulations" value={upsetStats.totalRuns} />
             <StatCard label="Avg Upsets / Run" value={upsetStats.avgUpsets} />
-            <StatCard label="Max Upsets" value={upsetStats.maxUpsets} />
-            <StatCard label="Cinderella Champions" value={upsetStats.cinderellaChampions} subtitle="(5+ seed)" />
+            <StatCard label="Max Upsets" value={upsetStats.maxUpsets} highlight="danger" />
+            <StatCard label="Cinderella Champions" value={upsetStats.cinderellaChampions} subtitle="(5+ seed)" highlight="gold" />
           </div>
         )}
 
         <div className="grid grid-cols-3 gap-6">
           {/* Championship leaderboard — main column */}
           <div className="col-span-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] mb-3">
               Championship Probability
             </h2>
-            <div className="rounded-xl border border-white/10 bg-gray-900/50 overflow-hidden">
+            <div className="rounded-xl border border-white/5 bg-[#151C2C] overflow-hidden">
               {/* Header row */}
-              <div className="grid grid-cols-[40px_1fr_100px_100px_100px] gap-2 px-4 py-2 border-b border-white/10 text-xs text-gray-500 uppercase tracking-wider">
+              <div className="grid grid-cols-[40px_1fr_100px_100px_100px] gap-2 px-4 py-2 border-b border-white/5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#475569]">
                 <span>#</span>
                 <span>Team</span>
                 <span className="text-right">Titles</span>
@@ -82,7 +84,7 @@ export default function LeaderboardPage() {
               </div>
 
               {leaderboard?.teams.length === 0 && (
-                <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                <div className="px-4 py-8 text-center text-[#475569] text-sm">
                   No simulations completed yet. Run a tournament to see results!
                 </div>
               )}
@@ -92,7 +94,7 @@ export default function LeaderboardPage() {
                   key={team.name}
                   className="grid grid-cols-[40px_1fr_100px_100px_100px] gap-2 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors items-center"
                 >
-                  <span className="text-sm font-mono text-gray-500">{idx + 1}</span>
+                  <span className="text-sm font-mono tabular-nums text-[#475569]">{idx + 1}</span>
                   <div className="flex items-center gap-2">
                     <span
                       className="flex h-5 w-6 shrink-0 items-center justify-center rounded-sm text-[10px] font-bold text-white"
@@ -100,18 +102,18 @@ export default function LeaderboardPage() {
                     >
                       {team.bestSeed}
                     </span>
-                    <span className="text-sm font-medium text-white truncate">{team.name}</span>
+                    <span className="text-sm font-semibold text-white truncate">{team.name}</span>
                   </div>
-                  <span className="text-right text-sm font-mono text-white">{team.championshipWins}</span>
-                  <span className="text-right text-sm font-mono text-gray-400">{team.finalFourAppearances}</span>
+                  <span className="text-right text-sm font-mono font-bold tabular-nums text-white">{team.championshipWins}</span>
+                  <span className="text-right text-sm font-mono tabular-nums text-[#94A3B8]">{team.finalFourAppearances}</span>
                   <div className="flex items-center justify-end gap-2">
-                    <div className="w-12 h-1.5 rounded-full bg-gray-800 overflow-hidden">
+                    <div className="w-12 h-1.5 rounded-full bg-[#1A2235] overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-yellow-400"
+                        className="h-full rounded-full bg-[#FFB800]"
                         style={{ width: `${team.championshipPct}%` }}
                       />
                     </div>
-                    <span className="text-sm font-mono text-yellow-400 w-10 text-right">
+                    <span className="text-sm font-mono font-bold tabular-nums text-[#FFB800] w-10 text-right">
                       {team.championshipPct}%
                     </span>
                   </div>
@@ -122,37 +124,37 @@ export default function LeaderboardPage() {
 
           {/* Recent results — sidebar */}
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] mb-3">
               Recent Simulations
             </h2>
             <div className="flex flex-col gap-2">
               {recentResults?.length === 0 && (
-                <div className="rounded-lg border border-white/10 bg-gray-900/50 px-4 py-6 text-center text-gray-500 text-sm">
+                <div className="rounded-lg border border-white/5 bg-[#151C2C] px-4 py-6 text-center text-[#475569] text-sm">
                   No results yet
                 </div>
               )}
               {recentResults?.map((result) => (
                 <div
                   key={result._id}
-                  className="rounded-lg border border-white/10 bg-gray-900/50 px-3 py-2"
+                  className="rounded-lg border border-white/5 bg-[#151C2C] px-3 py-2.5 hover:bg-[#1A2235] transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm">🏆</span>
-                      <span className="text-sm font-medium text-white">
+                      <span className="text-sm font-bold text-white">
                         #{result.championSeed} {result.champion}
                       </span>
                     </div>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-[10px] font-mono text-[#475569]">
                       {new Date(result.completedAt).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-[10px] font-mono tabular-nums text-[#94A3B8]">
                       {result.upsetCount} upsets
                     </span>
                     {result.biggestUpset && (
-                      <span className="text-xs text-red-400">
+                      <span className="text-[10px] font-bold text-[#FF3B5C]">
                         Biggest: {result.biggestUpset}
                       </span>
                     )}
@@ -167,12 +169,31 @@ export default function LeaderboardPage() {
   );
 }
 
-function StatCard({ label, value, subtitle }: { label: string; value: number; subtitle?: string }) {
+function StatCard({
+  label,
+  value,
+  subtitle,
+  highlight,
+}: {
+  label: string;
+  value: number;
+  subtitle?: string;
+  highlight?: "danger" | "gold" | "teal";
+}) {
+  const valueColor =
+    highlight === "danger"
+      ? "text-[#FF3B5C]"
+      : highlight === "gold"
+      ? "text-[#FFB800]"
+      : highlight === "teal"
+      ? "text-[#00E5A0]"
+      : "text-white";
+
   return (
-    <div className="rounded-xl border border-white/10 bg-gray-900/50 px-4 py-3 text-center">
-      <div className="text-2xl font-bold text-white">{value}</div>
-      <div className="text-xs text-gray-400 mt-0.5">{label}</div>
-      {subtitle && <div className="text-[10px] text-gray-600">{subtitle}</div>}
+    <div className="rounded-xl border border-white/5 bg-[#151C2C] px-4 py-4 text-center">
+      <div className={`text-3xl font-extrabold font-mono tabular-nums ${valueColor}`}>{value}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8] mt-1">{label}</div>
+      {subtitle && <div className="text-[10px] text-[#475569] mt-0.5">{subtitle}</div>}
     </div>
   );
 }

@@ -22,7 +22,7 @@ interface ConnectorLinesProps {
   direction: "ltr" | "rtl";
 }
 
-const STROKE = "rgba(255,255,255,0.15)";
+const STROKE = "rgba(255,255,255,0.08)";
 const STROKE_WIDTH = 1.5;
 
 export function ConnectorLines({
