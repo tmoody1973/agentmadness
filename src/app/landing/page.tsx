@@ -99,8 +99,9 @@ export default function LandingPage() {
           <div className="flex flex-wrap gap-4">
             {[
               { value: "136", label: "Teams" },
-              { value: "67", label: "Games" },
+              { value: "134", label: "Games" },
               { value: "$0.22", label: "/ Run" },
+              { value: "40+", label: "Years of Data" },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -357,7 +358,7 @@ export default function LandingPage() {
             </a>
           </div>
           <p className="text-xs text-white/30">
-            Built with Claude AI · 2025
+            Built with Claude AI · 2026
           </p>
         </div>
       </footer>
