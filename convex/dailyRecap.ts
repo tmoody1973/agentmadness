@@ -2,7 +2,7 @@
 
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 interface ParsedGame {
   teamAName: string;
@@ -135,14 +135,57 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
       throw new Error("Failed to parse Claude response as JSON");
     }
 
-    // 3. Enrich games with our prediction logic
-    // Higher seed (lower number) is the favorite — we assign baseline probability
+    // 3. Look up real team stats from Convex to compute actual predictions
+    // Get all teams from the template tournament
+    const templateTournament = await ctx.runQuery((internal as any).dailyRecapHelpers.getTemplateTournament, { gender });
+    let teamsByName: Map<string, { adjOE: number; adjDE: number; seed: number }> = new Map();
+
+    if (templateTournament) {
+      const bracketState = await ctx.runQuery(api.bracket.getBracketState, {
+        tournamentId: templateTournament._id
+      });
+      if (bracketState?.teams) {
+        for (const team of bracketState.teams) {
+          teamsByName.set(team.name, { adjOE: team.adjOE, adjDE: team.adjDE, seed: team.seed });
+          // Also try common name variations
+          teamsByName.set(team.name.replace("St ", "Saint "), { adjOE: team.adjOE, adjDE: team.adjDE, seed: team.seed });
+        }
+      }
+    }
+
+    // Historical upset rates for seed matchups
+    const UPSET_RATES: Record<string, number> = {
+      "1v16": 0.015, "2v15": 0.06, "3v14": 0.13, "4v13": 0.20,
+      "5v12": 0.35, "6v11": 0.37, "7v10": 0.39, "8v9": 0.48,
+    };
+
     const games = (recap.games ?? []).map((g: ParsedGame) => {
-      const favoriteIsA = g.teamASeed < g.teamBSeed;
-      const ourPrediction = favoriteIsA ? 0.7 : 0.3;
-      const weWereRight = favoriteIsA
-        ? g.actualWinner === g.teamAName
-        : g.actualWinner === g.teamBName;
+      // Try to find our actual prediction from team stats
+      const statsA = teamsByName.get(g.teamAName);
+      const statsB = teamsByName.get(g.teamBName);
+
+      let ourPrediction: number;
+      if (statsA && statsB) {
+        // Use our KenPom logistic formula (same as Kaggle submission)
+        const effA = statsA.adjOE - statsA.adjDE;
+        const effB = statsB.adjOE - statsB.adjDE;
+        ourPrediction = 1 / (1 + Math.pow(10, -(effA - effB) / 11));
+      } else {
+        // Fallback to seed-based estimate
+        const hi = Math.min(g.teamASeed, g.teamBSeed);
+        const lo = Math.max(g.teamASeed, g.teamBSeed);
+        const upsetRate = UPSET_RATES[`${hi}v${lo}`] ?? 0.3;
+        ourPrediction = g.teamASeed <= g.teamBSeed ? (1 - upsetRate) : upsetRate;
+      }
+
+      // Clamp
+      ourPrediction = Math.max(0.02, Math.min(0.98, ourPrediction));
+
+      // Did we correctly predict the winner?
+      const wePredictedA = ourPrediction > 0.5;
+      const aActuallyWon = g.actualWinner === g.teamAName;
+      const weWereRight = wePredictedA === aActuallyWon;
+
       return {
         teamAName: g.teamAName,
         teamASeed: g.teamASeed,
@@ -280,7 +323,7 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
       storeArgs.imageStorageId = imageStorageId;
     }
 
-    await ctx.runMutation(internal.dailyRecapHelpers.storeRecap, storeArgs);
+    await ctx.runMutation((internal as any).dailyRecapHelpers.storeRecap, storeArgs);
 
     return { success: true, gamesCount: games.length, accuracy };
   },

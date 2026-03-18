@@ -10,7 +10,6 @@
 
 import type * as bracket from "../bracket.js";
 import type * as dailyRecap from "../dailyRecap.js";
-import type * as dailyRecapHelpers from "../dailyRecapHelpers.js";
 import type * as init from "../init.js";
 import type * as leaderboard from "../leaderboard.js";
 import type * as prompts from "../prompts.js";
@@ -29,7 +28,6 @@ import type {
 declare const fullApi: ApiFromModules<{
   bracket: typeof bracket;
   dailyRecap: typeof dailyRecap;
-  dailyRecapHelpers: typeof dailyRecapHelpers;
   init: typeof init;
   leaderboard: typeof leaderboard;
   prompts: typeof prompts;

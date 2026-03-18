@@ -71,7 +71,7 @@ function PodcastPlayer({ storageId }: { storageId: Id<"_storage"> | undefined })
   const [currentTime, setCurrentTime] = useState(0);
 
   const url = useQuery(
-    api.dailyRecapHelpers.getRecapAudioUrl,
+    api.bracket.getAudioUrl,
     storageId ? { storageId } : "skip"
   );
 
@@ -161,7 +161,7 @@ function PodcastPlayer({ storageId }: { storageId: Id<"_storage"> | undefined })
 
 function HeroImage({ storageId }: { storageId: Id<"_storage"> | undefined }) {
   const url = useQuery(
-    api.dailyRecapHelpers.getRecapImageUrl,
+    api.bracket.getAudioUrl,
     storageId ? { storageId } : "skip"
   );
 
@@ -526,7 +526,7 @@ export default function NewsPage() {
   const [gender, setGender] = useState<"men" | "women">("men");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const recaps = useQuery(api.dailyRecapHelpers.getRecapsByGender, { gender }) as DailyRecap[] | undefined;
+  const recaps = useQuery(api.bracket.getRecapsByGender, { gender }) as DailyRecap[] | undefined;
   const today = new Date().toISOString().split("T")[0];
 
   return (

@@ -459,3 +459,16 @@ export const clearAll = mutation({
     }
   },
 });
+
+// ─── Daily Recap Queries (shared) ────────────────────────────────────────────
+
+export const getRecapsByGender = query({
+  args: { gender: v.union(v.literal("men"), v.literal("women")) },
+  handler: async (ctx, { gender }) => {
+    return ctx.db
+      .query("dailyRecaps")
+      .withIndex("by_gender", (q) => q.eq("gender", gender))
+      .order("desc")
+      .collect();
+  },
+});
