@@ -82,3 +82,18 @@ export const getRecapImageUrl = query({
     return ctx.storage.getUrl(storageId);
   },
 });
+
+export const deleteRecap = internalMutation({
+  args: { date: v.string(), gender: v.union(v.literal("men"), v.literal("women")) },
+  handler: async (ctx, { date, gender }) => {
+    const recap = await ctx.db
+      .query("dailyRecaps")
+      .withIndex("by_date_gender", (q) => q.eq("date", date).eq("gender", gender))
+      .first();
+    if (recap) {
+      if (recap.audioStorageId) await ctx.storage.delete(recap.audioStorageId);
+      if (recap.imageStorageId) await ctx.storage.delete(recap.imageStorageId);
+      await ctx.db.delete(recap._id);
+    }
+  },
+});

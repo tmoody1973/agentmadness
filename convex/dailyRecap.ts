@@ -29,8 +29,6 @@ export const generateDailyRecap = action({
     gender: v.union(v.literal("men"), v.literal("women")),
   },
   handler: async (ctx, { date, gender }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Auth required");
 
     // 1. Fetch real results from Perplexity
     const perplexityKey = process.env.PERPLEXITY_API_KEY;
