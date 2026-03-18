@@ -97,3 +97,63 @@ export const deleteRecap = internalMutation({
     }
   },
 });
+
+// Update template bracket with real First Four results
+export const updateFirstFourResult = internalMutation({
+  args: {
+    tournamentId: v.id("tournaments"),
+    bracketSlot: v.string(), // e.g. "Y16", "Z11"
+    winnerName: v.string(),
+    winnerScore: v.number(),
+    loserScore: v.number(),
+  },
+  handler: async (ctx, { tournamentId, bracketSlot, winnerName, winnerScore, loserScore }) => {
+    // Find the game by bracket slot
+    const games = await ctx.db
+      .query("games")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
+      .collect();
+    
+    const game = games.find((g) => g.bracketSlot === bracketSlot);
+    if (!game) throw new Error(`Game not found for slot ${bracketSlot}`);
+    
+    // Find both teams
+    const teamA = game.teamAId ? await ctx.db.get(game.teamAId) : null;
+    const teamB = game.teamBId ? await ctx.db.get(game.teamBId) : null;
+    
+    if (!teamA || !teamB) throw new Error("Teams not found");
+    
+    const winner = teamA.name === winnerName ? teamA : teamB;
+    const loser = teamA.name === winnerName ? teamB : teamA;
+    
+    // Update game
+    await ctx.db.patch(game._id, {
+      status: "completed" as const,
+      winnerId: winner._id,
+      winnerScore,
+      loserScore,
+      isUpset: false,
+      upsetMagnitude: 0,
+      mvp: "Real game result",
+      keyMoment: "Actual tournament result",
+      gameNarrative: `${winner.name} defeated ${loser.name} ${winnerScore}-${loserScore} in the First Four.`,
+      winProbability: 0.5,
+    });
+    
+    // Mark loser eliminated
+    await ctx.db.patch(loser._id, {
+      eliminated: true,
+      eliminatedRound: "FIRST_FOUR",
+    });
+    
+    // Advance winner to next game
+    if (game.nextGameId && game.nextGameSlot) {
+      const patch = game.nextGameSlot === "A"
+        ? { teamAId: winner._id }
+        : { teamBId: winner._id };
+      await ctx.db.patch(game.nextGameId, patch);
+    }
+    
+    return { winner: winner.name, loser: loser.name };
+  },
+});
