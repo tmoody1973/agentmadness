@@ -90,3 +90,62 @@ export const wireNextGame = internalMutation({
     });
   },
 });
+
+// ─── Daily Recap Storage ─────────────────────────────────────────────────────
+
+const gameSchema = v.object({
+  teamAName: v.string(),
+  teamASeed: v.number(),
+  teamBName: v.string(),
+  teamBSeed: v.number(),
+  ourPrediction: v.number(),
+  actualWinner: v.string(),
+  actualScoreWinner: v.optional(v.number()),
+  actualScoreLoser: v.optional(v.number()),
+  weWereRight: v.boolean(),
+  isUpset: v.boolean(),
+});
+
+export const storeRecap = internalMutation({
+  args: {
+    date: v.string(),
+    gender: v.union(v.literal("men"), v.literal("women")),
+    title: v.string(),
+    summary: v.string(),
+    script: v.string(),
+    audioStorageId: v.optional(v.id("_storage")),
+    imageStorageId: v.optional(v.id("_storage")),
+    games: v.array(gameSchema),
+    accuracy: v.number(),
+    totalGames: v.number(),
+    correctPicks: v.number(),
+    biggestSurprise: v.optional(v.string()),
+    createdAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("dailyRecaps")
+      .withIndex("by_date_gender", (q) => q.eq("date", args.date).eq("gender", args.gender))
+      .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return existing._id;
+    }
+    return ctx.db.insert("dailyRecaps", args);
+  },
+});
+
+export const deleteRecap = internalMutation({
+  args: { date: v.string(), gender: v.union(v.literal("men"), v.literal("women")) },
+  handler: async (ctx, { date, gender }) => {
+    const recap = await ctx.db
+      .query("dailyRecaps")
+      .withIndex("by_date_gender", (q) => q.eq("date", date).eq("gender", gender))
+      .first();
+    if (recap) {
+      if (recap.audioStorageId) await ctx.storage.delete(recap.audioStorageId);
+      if (recap.imageStorageId) await ctx.storage.delete(recap.imageStorageId);
+      await ctx.db.delete(recap._id);
+    }
+  },
+});

@@ -472,3 +472,11 @@ export const getRecapsByGender = query({
       .collect();
   },
 });
+
+export const getTemplateTournament = query({
+  args: { gender: v.union(v.literal("men"), v.literal("women")) },
+  handler: async (ctx, { gender }) => {
+    const tournaments = await ctx.db.query("tournaments").collect();
+    return tournaments.find((t) => t.gender === gender && !t.userId) ?? null;
+  },
+});

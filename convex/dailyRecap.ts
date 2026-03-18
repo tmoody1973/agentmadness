@@ -137,7 +137,7 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
 
     // 3. Look up real team stats from Convex to compute actual predictions
     // Get all teams from the template tournament
-    const templateTournament = await ctx.runQuery((internal as any).dailyRecapHelpers.getTemplateTournament, { gender });
+    const templateTournament = await ctx.runQuery(api.bracket.getTemplateTournament, { gender });
     let teamsByName: Map<string, { adjOE: number; adjDE: number; seed: number }> = new Map();
 
     if (templateTournament) {
@@ -323,7 +323,7 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
       storeArgs.imageStorageId = imageStorageId;
     }
 
-    await ctx.runMutation((internal as any).dailyRecapHelpers.storeRecap, storeArgs);
+    await ctx.runMutation(internal.seedHelpers.storeRecap, storeArgs);
 
     return { success: true, gamesCount: games.length, accuracy };
   },
