@@ -4,97 +4,72 @@ import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 
-interface ParsedGame {
-  teamAName: string;
-  teamASeed: number;
-  teamBName: string;
-  teamBSeed: number;
-  actualWinner: string;
-  actualScoreWinner?: number;
-  actualScoreLoser?: number;
-  isUpset: boolean;
-}
-
-interface ClaudeRecapResponse {
-  title?: string;
-  summary?: string;
-  script?: string;
-  games?: ParsedGame[];
-  biggestSurprise?: string;
-}
-
 export const generateDailyRecap = action({
   args: {
     date: v.string(),
     gender: v.union(v.literal("men"), v.literal("women")),
   },
   handler: async (ctx, { date, gender }) => {
-
-    // 1. Fetch real results from Perplexity
     const perplexityKey = process.env.PERPLEXITY_API_KEY;
-    let realResults = "";
+    if (!perplexityKey) throw new Error("PERPLEXITY_API_KEY required");
 
-    if (perplexityKey) {
-      const genderLabel = gender === "men" ? "men's" : "women's";
-      try {
-        const response = await fetch("https://api.perplexity.ai/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${perplexityKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "sonar",
-            messages: [
-              {
-                role: "user",
-                content: `List ALL ${genderLabel} NCAA Tournament basketball game results from ${date}. For each game include: winning team name, winning score, losing team name, losing score, and both teams' seeds. Format as a structured list. Include every game played that day.`,
-              },
-            ],
-            max_tokens: 2000,
-          }),
-        });
+    const genderLabel = gender === "men" ? "men's" : "women's";
 
-        if (response.ok) {
-          const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-          realResults = data.choices?.[0]?.message?.content ?? "";
-        } else {
-          console.warn(`Perplexity API error: ${response.status}`);
+    // ── 1. Get our team stats for prediction lookup ──
+    const templateTournament = await ctx.runQuery(api.bracket.getTemplateTournament, { gender });
+    const teamsByName = new Map<string, { adjOE: number; adjDE: number; seed: number }>();
+
+    if (templateTournament) {
+      const bracketState = await ctx.runQuery(api.bracket.getBracketState, {
+        tournamentId: templateTournament._id,
+      });
+      if (bracketState?.teams) {
+        for (const team of bracketState.teams) {
+          teamsByName.set(team.name, { adjOE: team.adjOE, adjDE: team.adjDE, seed: team.seed });
         }
-      } catch (err) {
-        console.warn("Perplexity fetch failed:", err);
       }
     }
 
-    // 2. Call Claude to structure the comparison and write the podcast script
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    if (!anthropicKey) throw new Error("ANTHROPIC_API_KEY required");
+    // ── 2. Call Perplexity sonar-pro for EVERYTHING — real results + article ──
+    const response = await fetch("https://api.perplexity.ai/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${perplexityKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "sonar-pro",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert sports journalist and data analyst covering the NCAA March Madness tournament. You write in an energetic ESPN SportsCenter style. Always return valid JSON.`,
+          },
+          {
+            role: "user",
+            content: `Search for ALL ${genderLabel} NCAA Tournament basketball game results from ${date} (March Madness 2026).
 
-    const genderLabel = gender === "men" ? "men's" : "women's";
-    const comparisonPrompt = `You are analyzing ${genderLabel} NCAA Tournament results and comparing them against AI predictions.
+For EACH game played that day, provide:
+- Both team names (exactly as ESPN/NCAA uses them)
+- Both team seed numbers
+- The winning team name
+- Winner's score and loser's score
+- Whether it was an upset (higher seed number won)
 
-Here are the real game results from ${date}:
-${realResults || "No results available yet — the games haven't been played."}
+Then write TWO things:
+1. A podcast script (400-600 words) written for SPOKEN delivery — energetic, dramatic pauses with "...", rhetorical questions, ESPN SportsCenter style. Open with a hook, highlight upsets and key moments, close with tomorrow's preview.
+2. A written article (600-800 words) in ESPN editorial style with clear paragraphs, game-by-game analysis, stat references, and dramatic narrative. Include a clear summary table of results at the top.
 
-For each game, identify both teams and their seeds, the actual winner and scores, and whether it was an upset (higher seed number won).
-
-Then write a 2-4 minute podcast script (about 400-600 words) in the style of an ESPN SportsCenter anchor. The script should:
-- Open with an energetic hook about the day's action
-- Highlight the biggest surprises and upsets
-- Mention key performances
-- Close with what to watch for tomorrow
-- Be written for SPOKEN delivery — short sentences, dramatic pauses (use "..." for pauses), rhetorical questions
-
-RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
+Return ONLY this JSON (no markdown backticks):
 {
-  "title": "Day title (e.g., Round of 64: Chalk Holds... Mostly)",
-  "summary": "2-3 sentence summary of the day",
-  "script": "The full podcast script, 400-600 words",
+  "title": "Catchy day title",
+  "summary": "2-3 sentence overview",
+  "script": "Full podcast script for TTS",
+  "article": "Full written article with markdown formatting (## headers, **bold**, tables)",
   "games": [
     {
-      "teamAName": "Higher seed team name",
+      "teamAName": "Higher seed team",
       "teamASeed": 1,
-      "teamBName": "Lower seed team name",
+      "teamBName": "Lower seed team",
       "teamBSeed": 16,
       "actualWinner": "Team that won",
       "actualScoreWinner": 78,
@@ -103,85 +78,87 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
     }
   ],
   "biggestSurprise": "One sentence about the most surprising result"
-}`;
-
-    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": anthropicKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2048,
-        messages: [{ role: "user", content: comparisonPrompt }],
+}`,
+          },
+        ],
+        max_tokens: 4000,
+        search_recency_filter: "week",
+        search_domain_filter: ["espn.com", "ncaa.com", "cbssports.com", "sports.yahoo.com"],
       }),
     });
 
-    if (!claudeResponse.ok) {
-      throw new Error(`Claude API error: ${claudeResponse.status}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Perplexity API error: ${response.status} — ${errText}`);
     }
 
-    const claudeData = await claudeResponse.json() as { content: Array<{ text: string }> };
-    const text = claudeData.content[0].text;
-    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const rawContent = data.choices?.[0]?.message?.content ?? "";
+    console.log("Perplexity response length:", rawContent.length);
+    console.log("Perplexity first 300 chars:", rawContent.substring(0, 300));
 
-    let recap: ClaudeRecapResponse;
+    // Parse JSON from response
+    const cleaned = rawContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    let recap: {
+      title?: string;
+      summary?: string;
+      script?: string;
+      article?: string;
+      games?: Array<{
+        teamAName: string;
+        teamASeed: number;
+        teamBName: string;
+        teamBSeed: number;
+        actualWinner: string;
+        actualScoreWinner?: number;
+        actualScoreLoser?: number;
+        isUpset?: boolean;
+      }>;
+      biggestSurprise?: string;
+    };
+
     try {
-      recap = JSON.parse(cleaned) as ClaudeRecapResponse;
+      recap = JSON.parse(cleaned);
     } catch {
-      console.error("Claude raw response:", cleaned);
-      throw new Error("Failed to parse Claude response as JSON");
-    }
-
-    // 3. Look up real team stats from Convex to compute actual predictions
-    // Get all teams from the template tournament
-    const templateTournament = await ctx.runQuery(api.bracket.getTemplateTournament, { gender });
-    let teamsByName: Map<string, { adjOE: number; adjDE: number; seed: number }> = new Map();
-
-    if (templateTournament) {
-      const bracketState = await ctx.runQuery(api.bracket.getBracketState, {
-        tournamentId: templateTournament._id
-      });
-      if (bracketState?.teams) {
-        for (const team of bracketState.teams) {
-          teamsByName.set(team.name, { adjOE: team.adjOE, adjDE: team.adjDE, seed: team.seed });
-          // Also try common name variations
-          teamsByName.set(team.name.replace("St ", "Saint "), { adjOE: team.adjOE, adjDE: team.adjDE, seed: team.seed });
+      console.error("Failed to parse Perplexity response as JSON:", cleaned.substring(0, 500));
+      // Try to extract JSON from the response
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          recap = JSON.parse(jsonMatch[0]);
+        } catch {
+          throw new Error("Could not parse any JSON from Perplexity response");
         }
+      } else {
+        throw new Error("No JSON found in Perplexity response");
       }
     }
 
-    // Historical upset rates for seed matchups
+    console.log(`Parsed ${recap.games?.length ?? 0} games from Perplexity`);
+
+    // ── 3. Compute our predictions for each game ──
     const UPSET_RATES: Record<string, number> = {
       "1v16": 0.015, "2v15": 0.06, "3v14": 0.13, "4v13": 0.20,
       "5v12": 0.35, "6v11": 0.37, "7v10": 0.39, "8v9": 0.48,
     };
 
-    const games = (recap.games ?? []).map((g: ParsedGame) => {
-      // Try to find our actual prediction from team stats
+    const games = (recap.games ?? []).map((g) => {
       const statsA = teamsByName.get(g.teamAName);
       const statsB = teamsByName.get(g.teamBName);
 
       let ourPrediction: number;
       if (statsA && statsB) {
-        // Use our KenPom logistic formula (same as Kaggle submission)
         const effA = statsA.adjOE - statsA.adjDE;
         const effB = statsB.adjOE - statsB.adjDE;
         ourPrediction = 1 / (1 + Math.pow(10, -(effA - effB) / 11));
       } else {
-        // Fallback to seed-based estimate
         const hi = Math.min(g.teamASeed, g.teamBSeed);
         const lo = Math.max(g.teamASeed, g.teamBSeed);
         const upsetRate = UPSET_RATES[`${hi}v${lo}`] ?? 0.3;
         ourPrediction = g.teamASeed <= g.teamBSeed ? (1 - upsetRate) : upsetRate;
       }
-
-      // Clamp
       ourPrediction = Math.max(0.02, Math.min(0.98, ourPrediction));
 
-      // Did we correctly predict the winner?
       const wePredictedA = ourPrediction > 0.5;
       const aActuallyWon = g.actualWinner === g.teamAName;
       const weWereRight = wePredictedA === aActuallyWon;
@@ -203,7 +180,7 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
     const correctPicks = games.filter((g) => g.weWereRight).length;
     const accuracy = games.length > 0 ? correctPicks / games.length : 0;
 
-    // 4. Generate podcast audio via ElevenLabs
+    // ── 4. Generate podcast audio via ElevenLabs ──
     let audioStorageId: string | undefined;
     const elevenLabsKey = process.env.ELEVENLABS_API_KEY;
     const voiceId = process.env.ELEVENLABS_VOICE_ID ?? "TxGEqnHWrfWFTfGW9XjX";
@@ -230,7 +207,6 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
             }),
           }
         );
-
         if (ttsResponse.ok) {
           const audioBlob = await ttsResponse.blob();
           audioStorageId = await ctx.storage.store(audioBlob);
@@ -242,16 +218,14 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
       }
     }
 
-    // 5. Generate hero image via Gemini (optional)
+    // ── 5. Generate hero image via Gemini ──
     let imageStorageId: string | undefined;
     const geminiKey = process.env.GEMINI_API_KEY;
 
-    if (geminiKey) {
+    if (geminiKey && games.length > 0) {
       try {
         const upsetCount = games.filter((g) => g.isUpset).length;
-        const imagePromptContext = recap.title
-          ? `${recap.title} — ${upsetCount} upsets in ${games.length} NCAA Tournament games`
-          : `NCAA March Madness ${genderLabel} tournament action on ${date}`;
+        const imageContext = recap.title ?? `NCAA March Madness ${genderLabel} tournament action`;
 
         const geminiResponse = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${geminiKey}`,
@@ -261,48 +235,31 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
             body: JSON.stringify({
               contents: [{
                 parts: [{
-                  text: `Generate a dramatic, cinematic sports photography image for an NCAA March Madness basketball tournament recap. The image should capture the energy of ${imagePromptContext}. Style: dark dramatic lighting, basketball arena atmosphere, ESPN broadcast quality. NO text or words in the image.`,
+                  text: `Generate a dramatic, cinematic sports photography image for an NCAA March Madness basketball tournament recap: "${imageContext}" with ${upsetCount} upsets in ${games.length} games. Style: dark dramatic lighting, basketball arena atmosphere, ESPN broadcast quality. NO text or words in the image.`,
                 }],
               }],
-              generationConfig: {
-                responseModalities: ["TEXT", "IMAGE"],
-              },
+              generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
             }),
           }
         );
 
         if (geminiResponse.ok) {
-          const geminiData = await geminiResponse.json() as {
-            candidates?: Array<{
-              content?: {
-                parts?: Array<{
-                  inline_data?: { data: string; mime_type: string };
-                  text?: string;
-                }>;
-              };
-            }>;
-          };
+          const geminiData = await geminiResponse.json() as any;
           const imagePart = geminiData.candidates?.[0]?.content?.parts?.find(
-            (p) => p.inline_data != null
+            (p: any) => p.inline_data != null
           );
           if (imagePart?.inline_data) {
             const imageBytes = Buffer.from(imagePart.inline_data.data, "base64");
             const imageBlob = new Blob([imageBytes], { type: imagePart.inline_data.mime_type });
             imageStorageId = await ctx.storage.store(imageBlob);
-          } else {
-            console.warn("Gemini response had no inline_data image part");
           }
-        } else {
-          const errText = await geminiResponse.text();
-          console.warn(`Gemini API error: ${geminiResponse.status} — ${errText}`);
         }
       } catch (err) {
         console.warn("Gemini image generation failed:", err);
       }
     }
 
-    // 6. Store the recap in the database
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // ── 6. Store the recap ──
     const storeArgs: any = {
       date,
       gender,
@@ -316,12 +273,8 @@ RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no trailing commas):
       biggestSurprise: recap.biggestSurprise,
       createdAt: Date.now(),
     };
-    if (audioStorageId !== undefined) {
-      storeArgs.audioStorageId = audioStorageId;
-    }
-    if (imageStorageId !== undefined) {
-      storeArgs.imageStorageId = imageStorageId;
-    }
+    if (audioStorageId) storeArgs.audioStorageId = audioStorageId;
+    if (imageStorageId) storeArgs.imageStorageId = imageStorageId;
 
     await ctx.runMutation(internal.seedHelpers.storeRecap, storeArgs);
 
