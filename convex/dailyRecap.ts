@@ -170,6 +170,7 @@ CRITICAL: Use SHORT team names matching NCAA convention (e.g. "Howard" not "Howa
     const games = (recap.games ?? []).map((g) => {
       const statsA = teamsByName.get(g.teamAName);
       const statsB = teamsByName.get(g.teamBName);
+      console.log(`Game: ${g.teamAName} vs ${g.teamBName} | statsA: ${!!statsA} statsB: ${!!statsB} | winner: ${g.actualWinner}`);
 
       let ourPrediction: number;
       if (statsA && statsB) {
@@ -271,11 +272,12 @@ CRITICAL: Use SHORT team names matching NCAA convention (e.g. "Howard" not "Howa
         if (geminiResponse.ok) {
           const geminiData = await geminiResponse.json() as any;
           const imagePart = geminiData.candidates?.[0]?.content?.parts?.find(
-            (p: any) => p.inline_data != null
+            (p: any) => p.inline_data != null || p.inlineData != null
           );
-          if (imagePart?.inline_data) {
-            const imageBytes = Buffer.from(imagePart.inline_data.data, "base64");
-            const imageBlob = new Blob([imageBytes], { type: imagePart.inline_data.mime_type });
+          const imgData = imagePart?.inline_data ?? imagePart?.inlineData;
+          if (imgData) {
+            const imageBytes = Buffer.from(imgData.data, "base64");
+            const imageBlob = new Blob([imageBytes], { type: imgData.mime_type ?? imgData.mimeType ?? "image/png" });
             imageStorageId = await ctx.storage.store(imageBlob);
           }
         }
