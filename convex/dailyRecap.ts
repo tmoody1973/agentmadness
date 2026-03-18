@@ -31,7 +31,7 @@ export const generateDailyRecap = action({
     }
 
     // ── 2. Call Perplexity sonar-pro for EVERYTHING — real results + article ──
-    const response = await fetch("https://api.perplexity.ai/chat/completions", {
+    const response = await fetch("https://api.perplexity.ai/v1/sonar", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${perplexityKey}`,
@@ -42,48 +42,72 @@ export const generateDailyRecap = action({
         messages: [
           {
             role: "system",
-            content: `You are an expert sports journalist and data analyst covering the NCAA March Madness tournament. You write in an energetic ESPN SportsCenter style. Always return valid JSON.`,
+            content: "You are a sports data assistant. Return ONLY accurate, verified NCAA Tournament game results. Do NOT make up or hallucinate any team names, scores, or results. If you cannot find verified results for a specific date, say so.",
           },
           {
             role: "user",
-            content: `Search for ALL ${genderLabel} NCAA Tournament basketball game results from ${date} (March Madness 2026).
+            content: `Give me a detailed recap of ${date}'s ${genderLabel} NCAA Tournament March Madness 2026 matches for the bracket. Only include games that are part of the NCAA Division I Men's or Women's Basketball Championship tournament bracket (First Four, Round of 64, etc). Do NOT include NIT, CBI, or other non-tournament games.
 
-For EACH game played that day, provide:
-- Both team names (exactly as ESPN/NCAA uses them)
-- Both team seed numbers
-- The winning team name
-- Winner's score and loser's score
-- Whether it was an upset (higher seed number won)
-
-Then write TWO things:
-1. A podcast script (400-600 words) written for SPOKEN delivery — energetic, dramatic pauses with "...", rhetorical questions, ESPN SportsCenter style. Open with a hook, highlight upsets and key moments, close with tomorrow's preview.
-2. A written article (600-800 words) in ESPN editorial style with clear paragraphs, game-by-game analysis, stat references, and dramatic narrative. Include a clear summary table of results at the top.
-
-Return ONLY this JSON (no markdown backticks):
+Return the results as JSON with this exact structure:
 {
-  "title": "Catchy day title",
-  "summary": "2-3 sentence overview",
-  "script": "Full podcast script for TTS",
-  "article": "Full written article with markdown formatting (## headers, **bold**, tables)",
+  "title": "Catchy recap title for the day",
+  "summary": "2-3 sentence overview of the day's action",
+  "script": "A 400-600 word podcast script in ESPN SportsCenter style, written for spoken delivery with dramatic pauses using '...' and rhetorical questions. Cover each game, highlight upsets, key performers, and preview tomorrow.",
+  "article": "A 600-800 word written article in ESPN editorial style with markdown headers (##), bold text (**), game-by-game analysis, notable stats, and narrative drama.",
   "games": [
     {
-      "teamAName": "Higher seed team",
-      "teamASeed": 1,
-      "teamBName": "Lower seed team",
+      "teamAName": "Team name exactly as NCAA uses (e.g. Howard, not Howard Bison)",
+      "teamASeed": 16,
+      "teamBName": "Other team name",
       "teamBSeed": 16,
-      "actualWinner": "Team that won",
-      "actualScoreWinner": 78,
-      "actualScoreLoser": 55,
-      "isUpset": false
+      "actualWinner": "Winning team short name",
+      "actualScoreWinner": 86,
+      "actualScoreLoser": 83,
+      "isUpset": false,
+      "notableFacts": ["Key fact 1", "Key fact 2"]
     }
   ],
   "biggestSurprise": "One sentence about the most surprising result"
-}`,
+}
+
+CRITICAL: Use SHORT team names matching NCAA convention (e.g. "Howard" not "Howard Bison", "NC State" not "NC State Wolfpack", "Texas" not "Texas Longhorns"). Only include games that ACTUALLY HAPPENED on ${date} — do not include future games or predictions.`,
           },
         ],
-        max_tokens: 4000,
-        search_recency_filter: "week",
-        search_domain_filter: ["espn.com", "ncaa.com", "cbssports.com", "sports.yahoo.com"],
+        max_tokens: 5000,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "ncaa_daily_recap",
+            schema: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                summary: { type: "string" },
+                script: { type: "string" },
+                article: { type: "string" },
+                games: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      teamAName: { type: "string" },
+                      teamASeed: { type: "number" },
+                      teamBName: { type: "string" },
+                      teamBSeed: { type: "number" },
+                      actualWinner: { type: "string" },
+                      actualScoreWinner: { type: "number" },
+                      actualScoreLoser: { type: "number" },
+                      isUpset: { type: "boolean" },
+                    },
+                    required: ["teamAName", "teamASeed", "teamBName", "teamBSeed", "actualWinner", "actualScoreWinner", "actualScoreLoser", "isUpset"],
+                  },
+                },
+                biggestSurprise: { type: "string" },
+              },
+              required: ["title", "summary", "script", "article", "games", "biggestSurprise"],
+            },
+          },
+        },
       }),
     });
 
@@ -92,8 +116,9 @@ Return ONLY this JSON (no markdown backticks):
       throw new Error(`Perplexity API error: ${response.status} — ${errText}`);
     }
 
-    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const rawContent = data.choices?.[0]?.message?.content ?? "";
+    const data = await response.json() as any;
+    // Handle both old chat/completions and new /v1/sonar response formats
+    const rawContent = data.choices?.[0]?.message?.content ?? data.output ?? "";
     console.log("Perplexity response length:", rawContent.length);
     console.log("Perplexity first 300 chars:", rawContent.substring(0, 300));
 
