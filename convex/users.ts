@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery, query } from "./_generated/server";
 
-const DAILY_LIMIT = 3;
+const DAILY_LIMIT = 20;
 
 // ─── recordSimulationRun (internal) ──────────────────────────────────────────
 
