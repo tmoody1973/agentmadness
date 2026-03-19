@@ -4,6 +4,12 @@ import type { Doc } from "./_generated/dataModel";
 
 type Team = Doc<"teams">;
 
+export interface SimParams {
+  chaosLevel: number;
+  homeCourtBoost: number;
+  recencyWeight: number;
+}
+
 // ─── Default Upset Rates ──────────────────────────────────────────────────────
 
 const DEFAULT_UPSET_RATES: Record<string, number> = {
@@ -34,41 +40,33 @@ function computeUpsetProbability(
   underdog: Team,
   upsetRates?: Record<string, number>
 ): number {
-  // Efficiency differential: higher = better for favorite
-  const favEff = favorite.adjOE - favorite.adjDE;
-  const undEff = underdog.adjOE - underdog.adjDE;
-  const effGap = favEff - undEff;
-  // Normalize: typical gap range ~[-30, 30]
-  const normalizedEffGap = clamp((effGap + 30) / 60, 0, 1);
-
-  // Combined volatility: higher = more random
-  const combinedVol = (favorite.volatility + underdog.volatility) / 2;
-  // Normalize: typical range [8, 25]
-  const normalizedCombinedVol = clamp((combinedVol - 8) / 17, 0, 1);
-
-  // Tournament experience gap: higher = better for favorite
-  const expGap = favorite.tournamentExperience - underdog.tournamentExperience;
-  // Normalize: typical range [-20, 40]
-  const normalizedExpGap = clamp((expGap + 20) / 60, 0, 1);
-
-  // Same-seed matchups (First Four): skip historical rate, weight on efficiency
+  // Same-seed matchups: use efficiency
   if (favorite.seed === underdog.seed) {
-    // For same-seed games, "upset" = team A losing to team B (arbitrary)
-    // Use efficiency as primary differentiator with volatility as chaos
-    const effProb = 1 - normalizedEffGap; // lower efficiency = more likely to "lose"
-    const upsetProb =
-      effProb * 0.55 +
-      normalizedCombinedVol * 0.25 +
-      (1 - normalizedExpGap) * 0.20;
-    return clamp(upsetProb, 0.15, 0.85);
+    const effFav = favorite.adjOE - favorite.adjDE;
+    const effUnd = underdog.adjOE - underdog.adjDE;
+    const diff = effFav - effUnd;
+    const prob = 1 / (1 + Math.pow(10, -diff / 15));
+    return clamp(1 - prob, 0.15, 0.85);
   }
 
-  // Standard seeded matchups
   const matchupKey = getMatchupKey(favorite.seed, underdog.seed);
   const rates = upsetRates ?? DEFAULT_UPSET_RATES;
   const historicalRate = rates[matchupKey] ?? DEFAULT_UPSET_RATES[matchupKey] ?? 0.15;
 
-  // Weighted upset probability formula
+  // Efficiency differential
+  const favEff = favorite.adjOE - favorite.adjDE;
+  const undEff = underdog.adjOE - underdog.adjDE;
+  const effGap = favEff - undEff;
+  const normalizedEffGap = clamp((effGap + 30) / 60, 0, 1);
+
+  // Combined volatility
+  const combinedVol = (favorite.volatility + underdog.volatility) / 2;
+  const normalizedCombinedVol = clamp((combinedVol - 8) / 17, 0, 1);
+
+  // Tournament experience gap
+  const expGap = favorite.tournamentExperience - underdog.tournamentExperience;
+  const normalizedExpGap = clamp((expGap + 20) / 60, 0, 1);
+
   const upsetProb =
     historicalRate * 0.35 +
     (1 - normalizedEffGap) * 0.30 +
@@ -78,49 +76,72 @@ function computeUpsetProbability(
   return clamp(upsetProb, 0.02, 0.98);
 }
 
-// ─── SimParams type ───────────────────────────────────────────────────────────
+// ─── Pre-determine winner using Math.random() ───────────────────────────────
 
-export interface SimParams {
-  chaosLevel: number;      // 0-100, default 50
-  homeCourtBoost: number;  // 0-100, default 50
-  recencyWeight: number;   // 0-100, default 50
+export interface PreDeterminedResult {
+  winner: Team;
+  loser: Team;
+  isUpset: boolean;
+  upsetMagnitude: number;
+  upsetProbability: number;
+  favoriteWinProb: number;
 }
 
-// ─── Prompt Builder ───────────────────────────────────────────────────────────
-
-export function buildRefereePrompt(
+export function determineWinner(
   teamA: Team,
   teamB: Team,
   upsetRates?: Record<string, number>,
   simParams?: SimParams
-): string {
-  // Determine favorite (lower seed number = better)
+): PreDeterminedResult {
   const favorite = teamA.seed <= teamB.seed ? teamA : teamB;
   const underdog = teamA.seed <= teamB.seed ? teamB : teamA;
 
   const baseUpsetProb = computeUpsetProbability(favorite, underdog, upsetRates);
 
-  // Apply chaos multiplier: chaosLevel 50 = no change, 0 = 50% reduction, 100 = 50% increase
+  // Apply chaos multiplier from sim settings
   let upsetProb = baseUpsetProb;
   if (simParams) {
     const chaosMultiplier = 1 + (simParams.chaosLevel - 50) / 100; // 0.5 to 1.5
     upsetProb = clamp(baseUpsetProb * chaosMultiplier, 0.02, 0.98);
   }
 
-  const favoriteWinProb = clamp(1 - upsetProb, 0.02, 0.98);
+  // THE KEY: Roll the dice! This is where randomness actually happens.
+  const roll = Math.random();
+  const isUpset = roll < upsetProb;
+
+  const winner = isUpset ? underdog : favorite;
+  const loser = isUpset ? favorite : underdog;
+  const upsetMagnitude = isUpset ? Math.abs(favorite.seed - underdog.seed) : 0;
+
+  return {
+    winner,
+    loser,
+    isUpset,
+    upsetMagnitude,
+    upsetProbability: upsetProb,
+    favoriteWinProb: 1 - upsetProb,
+  };
+}
+
+// ─── Prompt Builder (now tells Claude WHO won) ───────────────────────────────
+
+export function buildRefereePrompt(
+  teamA: Team,
+  teamB: Team,
+  predetermined: PreDeterminedResult,
+): string {
+  const { winner, loser, isUpset, upsetProbability, favoriteWinProb } = predetermined;
 
   const formatTeam = (team: Team, label: string): string => {
     return `## ${label}: ${team.name} (Seed #${team.seed})
 - Region: ${team.region}
 - Conference: ${team.conference.toUpperCase()}
 - Record: ${team.record}
-- NET Ranking: ${team.netRanking || "N/A"}
 - Adjusted Offensive Efficiency: ${team.adjOE.toFixed(1)}
 - Adjusted Defensive Efficiency: ${team.adjDE.toFixed(1)}
 - Net Efficiency: ${(team.adjOE - team.adjDE).toFixed(1)}
 - Adjusted Tempo: ${team.adjTempo.toFixed(1)}
 - Volatility: ${team.volatility.toFixed(1)}
-- Tournament Experience: ${team.tournamentExperience} tournament appearances
 - Clutch Rating: ${team.clutchRating}/10
 - Depth Score: ${team.depthScore}/10
 - Key Players: ${team.keyPlayers}
@@ -128,46 +149,44 @@ export function buildRefereePrompt(
 ${team.perplexityContext ? `- Context: ${team.perplexityContext}` : ""}`;
   };
 
-  return `You are a March Madness referee AI simulating a tournament game. Your task is to produce a realistic and narratively engaging game result in JSON format.
+  const avgTempo = (teamA.adjTempo + teamB.adjTempo) / 2;
+
+  return `You are writing the recap for an NCAA Tournament game that has ALREADY BEEN DECIDED.
 
 ${formatTeam(teamA, "Team A")}
 
 ${formatTeam(teamB, "Team B")}
 
-## Game Analysis
+## RESULT (ALREADY DETERMINED — DO NOT CHANGE)
 
-Favorite: ${favorite.name} (Seed #${favorite.seed}) — Win Probability: ${(favoriteWinProb * 100).toFixed(1)}%
-Underdog: ${underdog.name} (Seed #${underdog.seed}) — Upset Probability: ${(upsetProb * 100).toFixed(1)}%
+**WINNER: ${winner.name}** (Seed #${winner.seed})
+**LOSER: ${loser.name}** (Seed #${loser.seed})
+${isUpset ? `\n🔥 THIS IS AN UPSET! A #${winner.seed} seed has knocked off a #${loser.seed} seed! (Historical upset probability was ${(upsetProbability * 100).toFixed(1)}%)` : ""}
 
-This upset probability is a hard constraint derived from historical seed matchup rates, efficiency differentials, team volatility, and tournament experience. You MUST respect this probability when determining the winner. Specifically:
-- If you choose the underdog to win, it should only happen approximately ${(upsetProb * 100).toFixed(0)}% of the time
-- The favorite (${favorite.name}) should win approximately ${(favoriteWinProb * 100).toFixed(0)}% of the time
+## Your Job
 
-## Instructions
+Write the game narrative for this result. The winner has ALREADY been decided — your job is to explain HOW and WHY it happened.
 
-Simulate this game as if it just happened in the NCAA Tournament. Create a compelling, realistic narrative that reflects both teams' actual strengths, weaknesses, and playing styles.
+1. **Generate realistic scores** based on both teams' tempo (~${avgTempo.toFixed(0)} possessions) and efficiency.
+   - ${isUpset ? "This was an upset — make it a close, dramatic game. The underdog likely won by 1-6 points." : "The favorite won — the margin should reflect the efficiency gap. Could be close (1-5 pts) or a blowout (10-20+ pts)."}
 
-Scores should be realistic for college basketball (typically 60-90 points, close games within 5-10 points for upsets, larger margins for expected outcomes).
+2. **Pick an MVP** from the WINNER's key players. Use a real name from their roster.
 
-The MVP should be a player who had a decisive impact (use names from keyPlayers if available, otherwise invent a realistic player name).
+3. **Write a key moment** — the single play or run that decided the game. Short, punchy, broadcaster style.
 
-The keyMoment should describe the single most important play or sequence that decided the game — write it like a sports broadcaster calling the highlight. Short, punchy, dramatic.
+4. **Write a 2-3 sentence game narrative** in ESPN broadcast style — vivid, energetic, dramatic. This will be read aloud by a TTS announcer.
 
-The gameNarrative should be 2-3 sentences written in the style of an ESPN/CBS Sports broadcast recap — vivid, energetic language with dramatic pacing. Use phrases a TV announcer would say. This text will be read aloud by a text-to-speech announcer.
-
-## Required Output
-
-Respond with ONLY valid JSON (no markdown, no explanation) in this exact format:
+RESPOND WITH ONLY THIS JSON (no markdown, no backticks):
 {
-  "winner": "<team name — must be exactly '${teamA.name}' or '${teamB.name}'>",
-  "loser": "<team name — the other team>",
-  "winnerScore": <integer>,
-  "loserScore": <integer>,
-  "isUpset": <boolean — true if the underdog (${underdog.name}) wins>,
-  "upsetMagnitude": <number from 1-10 indicating how shocking the upset was, or 0 if no upset>,
-  "mvp": "<player name>",
-  "keyMoment": "<1-2 sentence description of the decisive moment>",
-  "gameNarrative": "<2-3 sentence narrative of the game>",
-  "winProbability": <decimal probability that the winner was favored to win, e.g. 0.75>
+  "winner": "${winner.name}",
+  "loser": "${loser.name}",
+  "winnerScore": <realistic integer>,
+  "loserScore": <realistic integer>,
+  "isUpset": ${isUpset},
+  "upsetMagnitude": ${predetermined.upsetMagnitude},
+  "mvp": "<player name from winner's roster>",
+  "keyMoment": "<1-2 sentence key play>",
+  "gameNarrative": "<2-3 sentence broadcast recap>",
+  "winProbability": ${favoriteWinProb.toFixed(4)}
 }`;
 }

@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { internalAction, action } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { buildRefereePrompt, SimParams } from "./prompts";
+import { buildRefereePrompt, determineWinner, SimParams } from "./prompts";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -153,9 +153,18 @@ export const simulateGame = internalAction({
       status: "simulating",
     });
 
-    // Build prompt and call Claude, passing simParams if present
+    // 1. PRE-DETERMINE THE WINNER using Math.random() + upset algorithm
     const simParams = tournament?.simParams as SimParams | undefined;
-    const prompt = buildRefereePrompt(teamA, teamB, undefined, simParams);
+    const predetermined = determineWinner(teamA, teamB, undefined, simParams);
+
+    console.log(
+      `Game: #${teamA.seed} ${teamA.name} vs #${teamB.seed} ${teamB.name} | ` +
+      `Upset prob: ${(predetermined.upsetProbability * 100).toFixed(1)}% | ` +
+      `Winner: ${predetermined.winner.name} ${predetermined.isUpset ? "🔥 UPSET!" : ""}`
+    );
+
+    // 2. Ask Claude to write the narrative (winner is already decided)
+    const prompt = buildRefereePrompt(teamA, teamB, predetermined);
 
     let result: GameResult;
 
@@ -163,21 +172,32 @@ export const simulateGame = internalAction({
       const rawResponse = await callClaudeApi(prompt);
       try {
         result = parseGameResult(rawResponse);
+        // Override winner/loser to match our pre-determination (in case Claude disobeys)
+        result.winner = predetermined.winner.name;
+        result.loser = predetermined.loser.name;
+        result.isUpset = predetermined.isUpset;
+        result.upsetMagnitude = predetermined.upsetMagnitude;
+        result.winProbability = predetermined.favoriteWinProb;
       } catch {
-        // Retry once on malformed JSON
         console.warn(`Malformed JSON on first attempt for game ${args.gameId}, retrying...`);
         const retryResponse = await callClaudeApi(prompt);
         result = parseGameResult(retryResponse);
+        result.winner = predetermined.winner.name;
+        result.loser = predetermined.loser.name;
+        result.isUpset = predetermined.isUpset;
+        result.upsetMagnitude = predetermined.upsetMagnitude;
+        result.winProbability = predetermined.favoriteWinProb;
       }
     } catch (error) {
-      // Deterministic fallback on total failure
       console.error(`Claude API failed for game ${args.gameId}:`, error);
       result = deterministicFallback(
-        teamA.name,
-        teamB.name,
-        teamA.seed,
-        teamB.seed
+        predetermined.winner.name,
+        predetermined.loser.name,
+        predetermined.winner.seed,
+        predetermined.loser.seed
       );
+      result.isUpset = predetermined.isUpset;
+      result.upsetMagnitude = predetermined.upsetMagnitude;
     }
 
     // Determine winner/loser IDs
