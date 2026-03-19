@@ -227,3 +227,15 @@ export const updateFirstFourResult = internalMutation({
     return { winner: winner.name, loser: loser.name };
   },
 });
+
+export const patchGameTeam = internalMutation({
+  args: {
+    gameId: v.id("games"),
+    slot: v.union(v.literal("A"), v.literal("B")),
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, { gameId, slot, teamId }) => {
+    const patch = slot === "A" ? { teamAId: teamId } : { teamBId: teamId };
+    await ctx.db.patch(gameId, patch);
+  },
+});
