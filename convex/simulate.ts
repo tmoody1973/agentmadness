@@ -158,9 +158,11 @@ export const simulateGame = internalAction({
     const predetermined = determineWinner(teamA, teamB, undefined, simParams);
 
     console.log(
-      `Game: #${teamA.seed} ${teamA.name} vs #${teamB.seed} ${teamB.name} | ` +
+      `[NEW-CODE-V2] Game: #${teamA.seed} ${teamA.name} vs #${teamB.seed} ${teamB.name} | ` +
       `Upset prob: ${(predetermined.upsetProbability * 100).toFixed(1)}% | ` +
-      `Winner: ${predetermined.winner.name} ${predetermined.isUpset ? "🔥 UPSET!" : ""}`
+      `isUpset: ${predetermined.isUpset} | ` +
+      `Winner: ${predetermined.winner.name} (seed ${predetermined.winner.seed}) | ` +
+      `Loser: ${predetermined.loser.name} (seed ${predetermined.loser.seed})`
     );
 
     // 2. Ask Claude to write the narrative (winner is already decided)
@@ -309,31 +311,14 @@ export const runSimulateRound = action({
       date: today,
     });
     const used = existing?.runCount ?? 0;
-    if (used >= 3) {
+    if (used >= 20) {
       throw new Error("Daily simulation limit reached (3 runs per day)");
     }
-
-    // Set tournament status to simulating (so UI shows spinner)
-    await ctx.runMutation(internal.bracket.patchTournamentStatus, {
-      tournamentId: args.tournamentId,
-      status: "simulating",
-    });
 
     await ctx.runAction(internal.simulate.simulateRound, {
       tournamentId: args.tournamentId,
       round: args.round,
     });
-
-    // Set back to ready (advanceRound may have set it to completed)
-    const t = await ctx.runQuery(internal.bracket.getTournament, {
-      tournamentId: args.tournamentId,
-    });
-    if (t?.status === "simulating") {
-      await ctx.runMutation(internal.bracket.patchTournamentStatus, {
-        tournamentId: args.tournamentId,
-        status: "ready",
-      });
-    }
 
     await ctx.runMutation(internal.users.recordSimulationRun, {
       userId: identity.subject,
@@ -356,7 +341,7 @@ export const runSimulateAll = action({
       date: today,
     });
     const used = existing?.runCount ?? 0;
-    if (used >= 3) {
+    if (used >= 20) {
       throw new Error("Daily simulation limit reached (3 runs per day)");
     }
 

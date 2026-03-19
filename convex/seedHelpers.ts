@@ -250,3 +250,37 @@ export const clearSimResults = internalMutation({
     return results.length;
   },
 });
+
+export const fixFirstFourR64Slots = internalMutation({
+  args: { tournamentId: v.id("tournaments") },
+  handler: async (ctx, { tournamentId }) => {
+    const games = await ctx.db.query("games").withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId)).collect();
+    const teams = await ctx.db.query("teams").withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId)).collect();
+    const teamsByName: Record<string, string> = {};
+    for (const t of teams) { teamsByName[t.name] = t._id; }
+    
+    const fixes: Record<string, string> = {
+      "R1X1": "Florida",
+      "R1Y1": "Michigan", 
+      "R1Y6": "Tennessee",
+      "R1Z6": "BYU",
+    };
+    
+    const results: string[] = [];
+    for (const game of games) {
+      if (game.round === "R64" && fixes[game.bracketSlot]) {
+        const teamName = fixes[game.bracketSlot];
+        const teamId = teamsByName[teamName];
+        if (teamId && !game.teamBId) {
+          await ctx.db.patch(game._id, { teamBId: teamId as any });
+          results.push(game.bracketSlot + ": " + teamName + " added");
+        } else if (game.teamBId) {
+          results.push(game.bracketSlot + ": already has teamB");
+        } else {
+          results.push(game.bracketSlot + ": " + teamName + " NOT FOUND");
+        }
+      }
+    }
+    return results;
+  },
+});
