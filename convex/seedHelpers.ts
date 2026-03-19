@@ -239,3 +239,14 @@ export const patchGameTeam = internalMutation({
     await ctx.db.patch(gameId, patch);
   },
 });
+
+export const clearSimResults = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const results = await ctx.db.query("simResults").collect();
+    for (const r of results) {
+      await ctx.db.delete(r._id);
+    }
+    return results.length;
+  },
+});
