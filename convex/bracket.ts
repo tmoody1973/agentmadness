@@ -480,3 +480,13 @@ export const getTemplateTournament = query({
     return tournaments.find((t) => t.gender === gender && !t.userId) ?? null;
   },
 });
+
+export const patchTournamentStatus = internalMutation({
+  args: {
+    tournamentId: v.id("tournaments"),
+    status: v.union(v.literal("ready"), v.literal("simulating"), v.literal("paused"), v.literal("completed")),
+  },
+  handler: async (ctx, { tournamentId, status }) => {
+    await ctx.db.patch(tournamentId, { status });
+  },
+});

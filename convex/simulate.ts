@@ -313,10 +313,27 @@ export const runSimulateRound = action({
       throw new Error("Daily simulation limit reached (3 runs per day)");
     }
 
+    // Set tournament status to simulating (so UI shows spinner)
+    await ctx.runMutation(internal.bracket.patchTournamentStatus, {
+      tournamentId: args.tournamentId,
+      status: "simulating",
+    });
+
     await ctx.runAction(internal.simulate.simulateRound, {
       tournamentId: args.tournamentId,
       round: args.round,
     });
+
+    // Set back to ready (advanceRound may have set it to completed)
+    const t = await ctx.runQuery(internal.bracket.getTournament, {
+      tournamentId: args.tournamentId,
+    });
+    if (t?.status === "simulating") {
+      await ctx.runMutation(internal.bracket.patchTournamentStatus, {
+        tournamentId: args.tournamentId,
+        status: "ready",
+      });
+    }
 
     await ctx.runMutation(internal.users.recordSimulationRun, {
       userId: identity.subject,
