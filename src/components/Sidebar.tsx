@@ -280,7 +280,7 @@ function GamePanel({
               <span className="font-bold text-white text-sm truncate">{winner.name}</span>
             </div>
             <span className="text-[#00E5A0] font-mono font-bold text-sm ml-2 shrink-0 tabular-nums">
-              {game.winnerId === game.teamAId ? game.winnerScore : game.loserScore}
+              {game.winnerScore}
             </span>
           </div>
 
@@ -296,7 +296,7 @@ function GamePanel({
               <span className="text-[#94A3B8] text-sm truncate">{loser.name}</span>
             </div>
             <span className="text-[#475569] font-mono text-sm ml-2 shrink-0 tabular-nums">
-              {game.winnerId === game.teamAId ? game.loserScore : game.winnerScore}
+              {game.loserScore}
             </span>
           </div>
 
