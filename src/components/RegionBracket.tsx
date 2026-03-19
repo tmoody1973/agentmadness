@@ -31,10 +31,33 @@ const ROW_HEIGHT = 68; // px per R64 game row
 const CARD_WIDTH = 210; // px for each matchup card
 const CONNECTOR_WIDTH = 28; // px for connector SVG columns
 
-function getRegionGamesByRound(games: Game[], region: string, round: string): Game[] {
-  return games
-    .filter((g) => g.region === region && g.round === round)
-    .sort((a, b) => a.gameOrder - b.gameOrder);
+// Standard NCAA bracket visual order for R64:
+// Pod 1: 1v16, 8v9 → R32
+// Pod 2: 5v12, 4v13 → R32
+// Pod 3: 6v11, 3v14 → R32
+// Pod 4: 7v10, 2v15 → R32
+// This ensures adjacent games feed into the same next-round game.
+const BRACKET_SEED_ORDER = [1, 16, 8, 9, 5, 12, 4, 13, 6, 11, 3, 14, 7, 10, 2, 15];
+
+function getBracketPosition(game: Game, teams: Team[]): number {
+  // For R64, sort by the higher seed's position in BRACKET_SEED_ORDER
+  const teamA = teams.find((t) => t._id === game.teamAId);
+  const teamB = teams.find((t) => t._id === game.teamBId);
+  const higherSeed = Math.min(teamA?.seed ?? 99, teamB?.seed ?? 99);
+  const idx = BRACKET_SEED_ORDER.indexOf(higherSeed);
+  return idx >= 0 ? idx : 99;
+}
+
+function getRegionGamesByRound(games: Game[], region: string, round: string, teams?: Team[]): Game[] {
+  const filtered = games.filter((g) => g.region === region && g.round === round);
+
+  if (round === "R64" && teams) {
+    // Sort R64 by bracket pod order so adjacent games feed into same R32
+    return filtered.sort((a, b) => getBracketPosition(a, teams) - getBracketPosition(b, teams));
+  }
+
+  // For R32+, sort by gameOrder (wiring handles the rest)
+  return filtered.sort((a, b) => a.gameOrder - b.gameOrder);
 }
 
 /**
@@ -99,9 +122,27 @@ export function RegionBracket({
 }: RegionBracketProps) {
   const accentColor = REGION_COLORS[regionName] ?? "#6b7280";
 
-  const r64 = getRegionGamesByRound(games, regionName, "R64");
-  const r32 = getRegionGamesByRound(games, regionName, "R32");
-  const s16 = getRegionGamesByRound(games, regionName, "S16");
+  const r64 = getRegionGamesByRound(games, regionName, "R64", teams);
+  // R32+ games need to match the visual order of their R64 feeders
+  // Sort R32 by the position of their first feeder game in the r64 order
+  const r64Ids = new Set(r64.map((g) => g._id));
+  const r32Unsorted = games.filter((g) => g.region === regionName && g.round === "R32");
+  const r32 = r32Unsorted.sort((a, b) => {
+    // Find the feeder R64 games for each R32 game
+    const feedersA = r64.filter((g) => g.nextGameId === a._id);
+    const feedersB = r64.filter((g) => g.nextGameId === b._id);
+    const posA = feedersA.length > 0 ? r64.indexOf(feedersA[0]) : 99;
+    const posB = feedersB.length > 0 ? r64.indexOf(feedersB[0]) : 99;
+    return posA - posB;
+  });
+  const s16Unsorted = games.filter((g) => g.region === regionName && g.round === "S16");
+  const s16 = s16Unsorted.sort((a, b) => {
+    const feedersA = r32.filter((g) => g.nextGameId === a._id);
+    const feedersB = r32.filter((g) => g.nextGameId === b._id);
+    const posA = feedersA.length > 0 ? r32.indexOf(feedersA[0]) : 99;
+    const posB = feedersB.length > 0 ? r32.indexOf(feedersB[0]) : 99;
+    return posA - posB;
+  });
   const e8 = getRegionGamesByRound(games, regionName, "E8");
 
   const totalRows = 8;
